@@ -3,11 +3,11 @@ type mouse = {
   up: bool,
   pressed: bool,
   pos: Point.Int.t,
-}
+};
 
 type state = {
   hooks: Hooks.t,
-  mouse: mouse,
+  mouse,
 };
 
 type id = int;

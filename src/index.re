@@ -42,7 +42,7 @@ let level = [
   ],
 ];
 
-let setup = env: Common.state => {
+let setup = (env): Common.state => {
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -52,7 +52,7 @@ let setup = env: Common.state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
-  }
+  };
 };
 
 let drawTile = (kind, x, y, env) => {
@@ -304,7 +304,7 @@ let draw = (state, env) => {
       ...state.mouse,
       down: false,
       up: false,
-    }
+    },
   };
 };
 
