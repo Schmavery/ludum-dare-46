@@ -84,9 +84,24 @@ let facingToDelta = (facing) => switch (facing) {
   | _ => Point.Int.zero
 };
 
-// TODO(david): Write turnFacing(facing, move)
-// ex: (Right, TurnRight) -> Down
-let turnFacing = (facing, move) => Down;
+let turnFacing = (facing, move) => {
+  [Up, Right, Down, Left]
+  switch(move) {
+    | Forward => facing
+    | TurnLeft => switch(facing) {
+      | Up => Left
+      | Right => Up
+      | Down => Right
+      | Left => Down
+    }
+    | TurnRight => switch(facing) {
+      | Up => Right
+      | Right => Down
+      | Down => Left
+      | Left => Up
+    }
+  }
+};
 
 let rec resolveMove = (level, pos, moveDelta) =>  {
   let secondPos = Point.Int.add(pos, moveDelta);
