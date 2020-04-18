@@ -3,45 +3,6 @@ open Reprocessing;
 
 let tileSizef = 50.;
 
-let id = {
-  let counter = ref(0);
-  () => {
-    incr(counter);
-    counter^;
-  };
-};
-
-let level = [
-  [
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-  ],
-  [
-    Floor(
-      Regular,
-      Player(
-        id(),
-        Right,
-        [Forward, Forward, Forward, Forward, TurnLeft, Forward],
-      ),
-    ),
-    Floor(Regular, Boulder(id(), Hard)),
-    Floor(Regular, Boulder(id(), Hard)),
-    Pit,
-    Floor(Regular, Empty),
-  ],
-  [
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-    Floor(Regular, Empty),
-  ],
-];
-
 let setup = (env): Common.state => {
   Env.size(~width=600, ~height=600, env);
   {
@@ -90,6 +51,9 @@ let drawTile = (kind, x, y, env) => {
     };
   | Pit =>
     Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=255), env);
+    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
+  | Wall =>
+    Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
     Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
   };
 };
@@ -184,9 +148,6 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
     | Move(level) => retryResolveMove(level)
     | other => other
     }
-  | (Floor(_, Player(_)), _) =>
-    print_endline("Failed to move player, go fill in some more cases");
-    Move(level);
   };
 };
 
@@ -254,33 +215,7 @@ let tick = level => {
   );
 };
 
-let draw = (state, env) => {
-  Hooks.initialize(state.hooks);
-  let (levelStack, setLevelStack) = Hooks.useState(__LOC__, [level]);
-  let currentLevel = List.hd(levelStack^);
-  let state = {
-    ...state,
-    mouse: {
-      ...state.mouse,
-      pos: Point.fromPair(Env.mouse(env)),
-    },
-  };
-
-  if (Env.keyPressed(R, env)) {
-    print_endline("Reset");
-    setLevelStack([level]);
-  };
-
-  if (Env.keyPressed(Space, env)) {
-    print_endline("Moving");
-    switch (tick(currentLevel)) {
-    | Move(level) => setLevelStack([level, ...levelStack^])
-    | Win => print_endline("You won")
-    | Lose => print_endline("You lost")
-    };
-  };
-  Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
-
+let drawMap = (map, env) => {
   List.iteri(
     (y, row) => {
       List.iteri(
@@ -295,8 +230,77 @@ let draw = (state, env) => {
         row,
       )
     },
-    currentLevel,
+    map,
   );
+};
+
+let draw = (state, env) => {
+  Hooks.initialize(state.hooks);
+  let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
+  let (gameState, setGameState) = Hooks.useState(__LOC__, Intro);
+
+  if (Env.keyPressed(T, env)) {
+    setLevels(Levels.all);
+    setGameState(Intro);
+  };
+
+  Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
+
+  switch (levels^, gameState^) {
+  | ([], _) =>
+    Draw.text(~body="You WON the whole game", ~pos=(100, 100), env)
+  | ([first, ...rest], Intro) =>
+    Draw.text(~body="Welcome", ~pos=(100, 100), env);
+    if (Env.keyPressed(Space, env)) {
+      setGameState(PreparingLevel(first));
+    };
+  | (
+      [levelInitialState, ...restOfLevels],
+      PreparingLevel(levelCurrentState),
+    ) =>
+    if (Env.keyPressed(R, env)) {
+      setGameState(PreparingLevel(levelInitialState));
+    };
+    if (Env.keyPressed(Space, env)) {
+      setGameState(RunningLevel([levelCurrentState]));
+    };
+    drawMap(levelCurrentState.map, env);
+  | (
+      [levelInitialState, ...restOfLevels],
+      RunningLevel([levelCurrentState, ...pastLevelStates]),
+    ) =>
+    if (Env.keyPressed(R, env)) {
+      setGameState(PreparingLevel(levelInitialState));
+    };
+    if (Env.keyPressed(Space, env)) {
+      switch (tick(levelCurrentState.map)) {
+      | Move(level) =>
+        setGameState(
+          RunningLevel([
+            {...levelCurrentState, map: level},
+            levelCurrentState,
+            ...pastLevelStates,
+          ]),
+        )
+      | Win =>
+        setLevels(restOfLevels);
+        setGameState(WinLevel(levelCurrentState));
+      | Lose => setGameState(LoseLevel)
+      };
+    };
+    drawMap(levelCurrentState.map, env);
+  | ([nextLevel, ..._], WinLevel(level)) =>
+    if (Env.keyPressed(Space, env)) {
+      setGameState(PreparingLevel(nextLevel));
+    };
+    drawMap(level.map, env);
+    Draw.text(~body="You WIN", ~pos=(100, 100), env);
+  | ([initialLevel, ..._], LoseLevel) =>
+    if (Env.keyPressed(Space, env)) {
+      setGameState(PreparingLevel(initialLevel));
+    };
+    Draw.text(~body="You LOSE", ~pos=(100, 100), env);
+  };
 
   {
     hooks: Hooks.finalize(),

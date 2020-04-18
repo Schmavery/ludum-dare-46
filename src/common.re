@@ -35,7 +35,19 @@ type tile =
   | Floor(floorKind, obj)
   | Pit;
 type map = list(list(tile));
+type level = {
+  map,
+  items: list(obj),
+  title: string,
+};
 type tick =
   | Win
   | Lose
   | Move(map);
+
+type gameState =
+  | Intro
+  | WinLevel(level)
+  | LoseLevel
+  | RunningLevel(list(level))
+  | PreparingLevel(level);
