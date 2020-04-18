@@ -1,46 +1,5 @@
+open Common;
 open Reprocessing;
-
-type mouse = {
-  down: bool,
-  up: bool,
-  pressed: bool,
-  pos: Point.t,
-}
-
-type state = {
-  hooks: Hooks.t,
-  mouse: mouse,
-};
-
-type id = int;
-type move =
-  | TurnRight
-  | Forward
-  | TurnLeft;
-type facing =
-  | Up
-  | Down
-  | Left
-  | Right;
-type boulderHealth =
-  | Hard
-  | Cracked; // TODO: We could have "strong" boulders be ones starting with a SuperHard state
-type obj =
-  | Player(id, facing, list(move))
-  | Boulder(id, boulderHealth)
-  | Empty;
-type floorKind =
-  | Regular
-  | FilledPit(id);
-type tile =
-  | Wall
-  | Floor(floorKind, obj)
-  | Pit;
-type map = list(list(tile));
-type tick =
-  | Win
-  | Lose
-  | Move(map);
 
 let tileSizef = 50.;
 
@@ -91,7 +50,7 @@ let setup = env => {
       down: false,
       up: false,
       pressed: false,
-      pos: Point.fromIntPair(Env.mouse(env)),
+      pos: Point.fromPair(Env.mouse(env)),
     },
   }
 };
@@ -204,7 +163,7 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
 
   switch (getLevelTile(level, pos), getLevelTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
-  | (Floor(k1, Boulder(id, health)), Wall) => Move(level) // TODO: crushed boulders
+  | (Floor(k1, Boulder(id, health)), Wall) => Move(level)
   | (_, Floor(_, Player(_))) => Lose
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
     replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
@@ -303,7 +262,7 @@ let draw = (state, env) => {
     ...state,
     mouse: {
       ...state.mouse,
-      pos: Point.fromIntPair(Env.mouse(env)),
+      pos: Point.fromPair(Env.mouse(env)),
     },
   };
 
