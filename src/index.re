@@ -1,11 +1,17 @@
 open Reprocessing;
 
-let setup = (env) => Env.size(~width=600, ~height=600, env);
+let setup = (env) => {
+  Env.size(~width=600, ~height=600, env);
+  Hooks.empty;
+}
 
-let draw = (_state, env) => {
+let draw = (state, env) => {
+  Hooks.initialize(state);
   Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
   Draw.fill(Utils.color(~r=41, ~g=166, ~b=244, ~a=255), env);
   Draw.rect(~pos=(150, 150), ~width=300, ~height=300, env)
+
+  Hooks.finalize();
 };
 
 run(~setup, ~draw, ());
