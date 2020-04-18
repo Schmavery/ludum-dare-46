@@ -3,7 +3,8 @@ open Reprocessing;
 type id = int;
 type move = TurnRight | Forward | TurnLeft;
 type facing = Up | Down | Left | Right;
-type obj = Player(id, facing, list(move)) | Boulder(id) | Empty;
+type boulderHealth = Hard | Cracked // TODO: We could have "strong" boulders be ones starting with a SuperHard state
+type obj = Player(id, facing, list(move)) | Boulder(id, boulderHealth) | Empty;
 type floorKind = Regular | FilledPit(id);
 type tile = Wall | Floor(floorKind, obj) | Pit ;
 type map = list(list(tile));
@@ -21,7 +22,7 @@ let id = {
 
 let level = [
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
-    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward, TurnLeft, Forward])), Floor(Regular, Boulder(id())), Floor(Regular, Boulder(id())), Pit, Floor(Regular, Empty) ],
+    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward, TurnLeft, Forward])), Floor(Regular, Boulder(id(), Cracked)), Floor(Regular, Boulder(id(), Hard)), Pit, Floor(Regular, Empty) ],
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
   ];
 
@@ -44,8 +45,11 @@ let drawTile = (kind, x, y, env) => { switch (kind) {
           Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=255), env);
           let halfTileSize = tileSizef /. 2.;
           Draw.ellipsef(~center=(x +. halfTileSize, y +. halfTileSize), ~radx=halfTileSize, ~rady=halfTileSize, env)
-        | Boulder(_) =>
-          Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
+        | Boulder(_, health) =>
+          switch(health) {
+            | Hard => Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
+            | Cracked => Draw.fill(Utils.color(~r=100, ~g=50, ~b=50, ~a=255), env);
+          };
           let halfTileSize = tileSizef /. 2.;
           Draw.ellipsef(~center=(x +. halfTileSize, y +. halfTileSize), ~radx=halfTileSize, ~rady=halfTileSize, env)
         | Empty => ()
@@ -86,7 +90,6 @@ let facingToDelta = (facing) => switch (facing) {
 };
 
 let turnFacing = (facing, move) => {
-  [Up, Right, Down, Left]
   switch(move) {
     | Forward => facing
     | TurnLeft => switch(facing) {
@@ -111,10 +114,10 @@ let rec resolveMove = (level, pos, moveDelta) =>  {
 
   switch (getLevelTile(level, pos), getLevelTile(level, secondPos)) {
     | (Wall | Pit | Floor(_, Empty), _) => Move(level)
-    | (Floor(k1, Boulder(id)), Wall) => Move(level) // TODO: crushed boulders
+    | (Floor(k1, Boulder(id, health)), Wall) => Move(level) // TODO: crushed boulders
     | (_, Floor(_, Player(_))) => Lose
-    | (Floor(k1, Boulder(id)), Floor(k2, Empty)) => replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id)))
-    | (Floor(k1, Boulder(id)), Pit) => replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
+    | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) => replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
+    | (Floor(k1, Boulder(id, health)), Pit) => replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
     | (Floor(k1, Player(_) as p), Floor(k2, Empty)) =>
       replaceWith(level, Floor(k1, Empty), Floor(k2, p))
     | (Floor(_, Player(_)), Wall)
@@ -133,13 +136,13 @@ let rec resolveMove = (level, pos, moveDelta) =>  {
     | (Floor(_, Player(_)), _) =>
       print_endline("Failed to move player, go fill in some more cases");
       Move(level)
-    | (Floor(k1, Boulder(id)), Floor(k2, Boulder(_))) =>
+    | (Floor(k1, Boulder(id, health1)), Floor(k2, Boulder(_, health2))) =>
       switch (resolveMove(level, secondPos, moveDelta)) {
         | Move(level) =>
           // TODO I kinda want to just call resolveMove again cause this is
           // repetitive.........
           switch (getLevelTile(level, secondPos)){
-            | Floor(k2, Empty) => replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id)))
+            | Floor(k2, Empty) => replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health1)))
             | Pit => replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
             | _ => Move(level) // TODO: crushed boulders? Other cases?
           }
