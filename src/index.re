@@ -106,8 +106,8 @@ let drawInventory = (inventory, env) => {
   let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0
 
   List.iteri((i, item) => {
-    let x = (xOffset +. float_of_int(i) *. (Common.tileSizef +. Common.btnMargin)) mod_float Env.width(env);
-    let y = backgroundY +. (Common.tileSizef +. Common.btnMargin) *. float_of_int(i mod Common.toolbarItemRowLen);
+    let x = (xOffset +. float_of_int(i mod Common.toolbarItemRowLen) *. (Common.tileSizef +. Common.btnMargin));
+    let y = backgroundY +. (Common.tileSizef +. Common.btnMargin) *. float_of_int(i / Common.toolbarItemRowLen);
     drawTile(item, x, y, env)
   }, inventory);
 };
