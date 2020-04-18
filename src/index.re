@@ -22,7 +22,7 @@ let id = {
 
 let level = [
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
-    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward, TurnLeft, Forward])), Floor(Regular, Boulder(id(), Cracked)), Floor(Regular, Boulder(id(), Hard)), Pit, Floor(Regular, Empty) ],
+    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward, TurnLeft, Forward])), Floor(Regular, Boulder(id(), Hard)), Floor(Regular, Boulder(id(), Hard)), Pit, Floor(Regular, Empty) ],
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
   ];
 
@@ -107,10 +107,16 @@ let turnFacing = (facing, move) => {
   }
 };
 
-let rec resolveMove = (level, pos, moveDelta) =>  {
+let rec resolveMove = (level, pos, moveDelta, preResolved) =>  {
   let secondPos = Point.Int.add(pos, moveDelta);
   let replaceWith = (level, t1, t2) =>
     Move(setLevelTile(setLevelTile(level, pos, t1), secondPos, t2));
+
+  let retryResolveMove = (level) => 
+    resolveMove(level, pos, moveDelta, true);
+
+  let resolveMove = (level, pos, moveDelta) => 
+    !preResolved ? resolveMove(level, pos, moveDelta, false) : Move(level);
 
   switch (getLevelTile(level, pos), getLevelTile(level, secondPos)) {
     | (Wall | Pit | Floor(_, Empty), _) => Move(level)
@@ -122,33 +128,20 @@ let rec resolveMove = (level, pos, moveDelta) =>  {
       replaceWith(level, Floor(k1, Empty), Floor(k2, p))
     | (Floor(_, Player(_)), Wall)
     | (Floor(_, Player(_)), Pit) => Lose
-    | (Floor(k1, Player(_) as p), Floor(k2, Boulder(_))) =>
-      // TODO: Handle win/lose in the recursive case
+    | (Floor(k1, Player(_) as p), Floor(k2, Boulder(_, Cracked))) when preResolved =>
+        replaceWith(level, Floor(k1, p), Floor(k2, Empty))
+    | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, Hard))) when preResolved =>
+        replaceWith(level, Floor(k1, p), Floor(k2, Boulder(id, Cracked)))
+    | (Floor(k1, Player(_)| Boulder(_, _)), Floor(k2, Boulder(_))) =>
       switch (resolveMove(level, secondPos, moveDelta)) {
-        | Move(level) =>
-          switch (getLevelTile(level, secondPos)){
-            | Floor(k2, Empty) => replaceWith(level, Floor(k1, Empty), Floor(k2, p))
-            | Pit | Wall => Lose
-            | _ => Move(level) // TODO: crushed boulders? Other cases? Many of these cases can't happen...
-          }
+        | Move(level) => retryResolveMove(level)
         | other => other
       }
     | (Floor(_, Player(_)), _) =>
       print_endline("Failed to move player, go fill in some more cases");
       Move(level)
-    | (Floor(k1, Boulder(id, health1)), Floor(k2, Boulder(_, health2))) =>
-      switch (resolveMove(level, secondPos, moveDelta)) {
-        | Move(level) =>
-          // TODO I kinda want to just call resolveMove again cause this is
-          // repetitive.........
-          switch (getLevelTile(level, secondPos)){
-            | Floor(k2, Empty) => replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health1)))
-            | Pit => replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
-            | _ => Move(level) // TODO: crushed boulders? Other cases?
-          }
-        | other => other
-      }
-}};
+    }
+};
 
 
 type agentInfo =
@@ -175,7 +168,7 @@ let tick = (level) => {
     (level, agent) => switch (level, agent) {
       | (Move(level), Push(facing, pos)) =>
       Point.Int.print(pos);
-      resolveMove(level, pos, facingToDelta(facing));
+      resolveMove(level, pos, facingToDelta(facing), false);
       | (_, AgentWin) | (Win, _) => Win
       | (Lose, _) => Lose // TODO: Might still want to resolve the rest of the moves..
     },
