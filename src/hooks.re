@@ -17,8 +17,7 @@ module Internal: {
 
   let finalize = () => globalRef^;
 
-  let useState =
-      (loc, ~id="", initialState) => {
+  let useState = (loc, ~id="", initialState) => {
     let key = loc ++ id;
     let initialState = Obj.magic(initialState);
     let v =
@@ -37,4 +36,4 @@ module Internal: {
   };
 };
 
-include Internal
+include Internal;

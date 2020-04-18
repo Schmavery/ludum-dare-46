@@ -6,7 +6,8 @@
     "build": "bsb -make-world -backend bytecode",
     "build:web": "bsb -make-world -backend js",
     "build:native": "bsb -make-world -backend native",
-    "clean": "bsb -clean-world"
+    "clean": "bsb -clean-world",
+    "reformat": "bsrefmt --in-place $(find src -name '*.re' -print)"
   },
   "dependencies": {
     "reprocessing": "Schmavery/reprocessing"
