@@ -6,7 +6,7 @@ module Common = {
   let create = (x, y) => {x, y};
   let toPair = ({x, y}) => (x, y);
   let fromPair = ((x, y)) => {x, y};
-  let map = (~f, {x, y}) => {x:f(x), y:f(y)}; 
+  let map = (~f, {x, y}) => {x: f(x), y: f(y)};
 };
 include Common;
 
@@ -19,12 +19,12 @@ module Int = {
   let addScalar = ({x, y}, s) => {x: x + s, y: y + s};
   let divScalar = ({x, y}, s) => {x: x / s, y: y / s};
   let neg = x => sub(zero, x);
-  let mag = ({x, y}) => sqrt(float_of_int(x*x + y*y));
+  let mag = ({x, y}) => sqrt(float_of_int(x * x + y * y));
   let print = t => Printf.printf("{x:%d,y:%d}\n%!", t.x, t.y);
   let ofFloatPt = t => map(t, ~f=int_of_float);
   let (+) = add;
   let (-) = sub;
-  let (/@) = divScalar
+  let (/@) = divScalar;
   let (+@) = addScalar;
 };
 
@@ -37,7 +37,7 @@ module Float = {
   let addScalar = ({x, y}, s) => {x: x +. s, y: y +. s};
   let divScalar = ({x, y}, s) => {x: x /. s, y: y /. s};
   let neg = x => sub(zero, x);
-  let mag = ({x, y}) => sqrt(x *. x +.  y *. y);
+  let mag = ({x, y}) => sqrt(x *. x +. y *. y);
   let print = t => Printf.printf("{x:%f,y:%f}\n%!", t.x, t.y);
   let ofIntPt = t => map(t, ~f=float_of_int);
   let (+) = add;
