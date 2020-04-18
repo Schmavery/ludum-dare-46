@@ -21,7 +21,7 @@ let id = {
 
 let level = [
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
-    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward])), Floor(Regular, Boulder(id())), Floor(Regular, Boulder(id())), Pit, Floor(Regular, Empty) ],
+    [ Floor(Regular, Player(id(), Right, [Forward, Forward, Forward, Forward, TurnLeft, Forward])), Floor(Regular, Boulder(id())), Floor(Regular, Boulder(id())), Pit, Floor(Regular, Empty) ],
     [ Floor(Regular, Empty),  Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty), Floor(Regular, Empty) ],
   ];
 
@@ -79,9 +79,10 @@ let updateLevelTile = (level, {x, y}: Point.Int.t, update) => {
 };
 
 let facingToDelta = (facing) => switch (facing) {
-  | Right => Point.create(1, 0);
-  // TODO(david): Finish the cases
-  | _ => Point.Int.zero
+  | Up => Point.create(0, -1)
+  | Right => Point.create(1, 0)
+  | Down => Point.create(0, 1)
+  | Left => Point.create(-1, 0)
 };
 
 let turnFacing = (facing, move) => {
