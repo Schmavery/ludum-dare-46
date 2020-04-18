@@ -37,7 +37,7 @@ type tile =
 type map = list(list(tile));
 type level = {
   map,
-  items: list(obj),
+  items: list(tile),
   title: string,
 };
 type tick =
