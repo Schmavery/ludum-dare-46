@@ -71,6 +71,53 @@ let drawTile = (kind, x, y, env) => {
   };
 };
 
+let drawInventoryBackground = env => {
+  Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
+  let width = float_of_int(Env.width(env));
+  let height = float_of_int(Env.height(env));
+  let x = 0.0;
+  let y = height -. Common.toolbarHeight;
+  Draw.rectf(~pos=(x, y), ~width, ~height, env);
+  y;
+};
+
+let drawInventory = (inventory, env) => {
+  let backgroundY = drawInventoryBackground(env);
+  let btnSize = Common.toolbarHeight /. 2.0 -. 2.0 *. Common.btnMargin;
+
+  Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
+  Draw.rectf(
+    ~pos=(Common.btnMargin, Common.btnMargin +. backgroundY),
+    ~width=btnSize,
+    ~height=btnSize,
+    env,
+  );
+
+  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
+  let x = Common.btnMargin *. 2.0 +. btnSize;
+  Draw.rectf(
+    ~pos=(x, Common.btnMargin +. backgroundY),
+    ~width=btnSize,
+    ~height=btnSize,
+    env,
+  );
+
+  // let width = float_of_int();
+  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0
+
+  List.iteri((i, item) => {
+    let x = (xOffset +. float_of_int(i) *. (Common.tileSizef +. Common.btnMargin)) mod_float Env.width(env);
+    let y = backgroundY +. (Common.tileSizef +. Common.btnMargin) *. float_of_int(i mod Common.toolbarItemRowLen);
+    drawTile(item, x, y, env)
+  }, inventory);
+};
+
+let drawControls = env => {
+  let y = drawInventoryBackground(env);
+  ();
+  // Draw the inventory.
+};
+
 let getLevelTile = (level, {x, y}: Point.Int.t) => {
   switch (List.nth_opt(level, y)) {
   | None => Wall
@@ -278,7 +325,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, env);
-    Toolbar.drawInventory(levelCurrentState.items, env);
+    drawInventory(levelCurrentState.items, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -303,7 +350,7 @@ let draw = (state, env) => {
       };
     };
     drawMap(levelCurrentState.map, env);
-    Toolbar.drawControls(env);
+    drawControls(env);
   | ([nextLevel, ..._], WinLevel(level)) =>
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));

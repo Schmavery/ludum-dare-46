@@ -10,7 +10,20 @@ let id = {
 
 let level1 = {
   title: "Tutorial",
-  items: [Floor(Regular, Boulder(id(), Hard))],
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
   map: [
     [
       Floor(Regular, Empty),
@@ -45,7 +58,20 @@ let level1 = {
 
 let level2 = {
   title: "Tutorial",
-  items: [Floor(Regular, Boulder(id(), Hard))],
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
   map: [
     [
       Floor(Regular, Empty),
