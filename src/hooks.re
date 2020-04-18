@@ -3,7 +3,7 @@ module Internal: {
   let empty: t;
   let initialize: t => unit;
   let finalize: unit => t;
-  let useState: (string, ~id: string=?, 'a) => ('a, ('a => 'a) => unit);
+  let useState: (string, ~id: string=?, 'a) => (ref('a), 'a => unit);
 } = {
   module StringMap = Map.Make(String);
 
@@ -18,19 +18,19 @@ module Internal: {
   let finalize = () => globalRef^;
 
   let useState =
-      (loc: string, ~id="", initialState: 'a): ('a, ('a => 'a) => unit) => {
+      (loc, ~id="", initialState) => {
     let key = loc ++ id;
     let initialState = Obj.magic(initialState);
     let v =
       switch (StringMap.find(key, globalRef^)) {
-      | v => v
+      | v => ref(v)
       | exception Not_found =>
         globalRef := StringMap.add(key, initialState, globalRef^);
-        initialState;
+        ref(initialState);
       };
-    let setState = cb => {
-      let currentVal = Obj.magic(StringMap.find(key, globalRef^));
-      let newVal = Obj.magic(cb(currentVal));
+    let setState = newVal => {
+      let newVal = Obj.magic(newVal);
+      v := newVal;
       globalRef := StringMap.add(key, newVal, globalRef^);
     };
     (Obj.magic(v), setState);
