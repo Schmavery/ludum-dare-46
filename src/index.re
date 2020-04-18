@@ -265,6 +265,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, env);
+    Toolbar.drawInventory(levelCurrentState.items, env)
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -289,6 +290,7 @@ let draw = (state, env) => {
       };
     };
     drawMap(levelCurrentState.map, env);
+    Toolbar.drawControls(env);
   | ([nextLevel, ..._], WinLevel(level)) =>
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));
