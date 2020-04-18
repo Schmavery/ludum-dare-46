@@ -1,3 +1,5 @@
+let tileSizef = 50.;
+
 type mouse = {
   down: bool,
   up: bool,

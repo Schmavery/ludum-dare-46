@@ -1,8 +1,6 @@
 open Common;
 open Reprocessing;
 
-let tileSizef = 50.;
-
 let setup = (env): Common.state => {
   Env.size(~width=600, ~height=600, env);
   {
@@ -24,11 +22,16 @@ let drawTile = (kind, x, y, env) => {
     | FilledPit(_) =>
       Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
     };
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
+    Draw.rectf(
+      ~pos=(x, y),
+      ~width=Common.tileSizef,
+      ~height=Common.tileSizef,
+      env,
+    );
     switch (obj) {
     | Player(_, _, _) =>
       Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=255), env);
-      let halfTileSize = tileSizef /. 2.;
+      let halfTileSize = Common.tileSizef /. 2.;
       Draw.ellipsef(
         ~center=(x +. halfTileSize, y +. halfTileSize),
         ~radx=halfTileSize,
@@ -40,7 +43,7 @@ let drawTile = (kind, x, y, env) => {
       | Hard => Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env)
       | Cracked => Draw.fill(Utils.color(~r=100, ~g=50, ~b=50, ~a=255), env)
       };
-      let halfTileSize = tileSizef /. 2.;
+      let halfTileSize = Common.tileSizef /. 2.;
       Draw.ellipsef(
         ~center=(x +. halfTileSize, y +. halfTileSize),
         ~radx=halfTileSize,
@@ -51,10 +54,20 @@ let drawTile = (kind, x, y, env) => {
     };
   | Pit =>
     Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=255), env);
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
+    Draw.rectf(
+      ~pos=(x, y),
+      ~width=Common.tileSizef,
+      ~height=Common.tileSizef,
+      env,
+    );
   | Wall =>
     Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
+    Draw.rectf(
+      ~pos=(x, y),
+      ~width=Common.tileSizef,
+      ~height=Common.tileSizef,
+      env,
+    );
   };
 };
 
@@ -222,8 +235,8 @@ let drawMap = (map, env) => {
         (x, tile) => {
           drawTile(
             tile,
-            float_of_int(x) *. tileSizef,
-            float_of_int(y) *. tileSizef,
+            float_of_int(x) *. Common.tileSizef,
+            float_of_int(y) *. Common.tileSizef,
             env,
           )
         },
@@ -265,7 +278,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, env);
-    Toolbar.drawInventory(levelCurrentState.items, env)
+    Toolbar.drawInventory(levelCurrentState.items, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
