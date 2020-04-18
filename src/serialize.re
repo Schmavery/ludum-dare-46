@@ -18,9 +18,7 @@ let move = m => {
 };
 
 let moves = mList => {
-  "["
-  ++ String.concat(",", List.map(m => {move(m)}, mList))
-  ++ "]";
+  "[" ++ String.concat(",", List.map(m => {move(m)}, mList)) ++ "]";
 };
 
 let boulderHealth = health => {
@@ -42,13 +40,8 @@ let facing = f => {
 let obj = o => {
   switch (o) {
   | Player(id, f, mList) =>
-    "Player(id(),"
-    ++ facing(f)
-    ++ ","
-    ++ moves(mList)
-    ++ ")"
-  | Boulder(id, health) =>
-    "Boulder(id()," ++ boulderHealth(health) ++ ")"
+    "Player(id()," ++ facing(f) ++ "," ++ moves(mList) ++ ")"
+  | Boulder(id, health) => "Boulder(id()," ++ boulderHealth(health) ++ ")"
   | Empty => "Empty"
   };
 };
@@ -56,12 +49,7 @@ let obj = o => {
 let tile = t => {
   switch (t) {
   | Wall => "Wall"
-  | Floor(fKind, o) =>
-    "Floor("
-    ++ floorKind(fKind)
-    ++ ", "
-    ++ obj(o)
-    ++ ")"
+  | Floor(fKind, o) => "Floor(" ++ floorKind(fKind) ++ ", " ++ obj(o) ++ ")"
   | Pit => "Pit"
   };
 };
@@ -73,12 +61,7 @@ let map = m => {
          ",",
          List.map(
            row => {
-             "["
-             ++ String.concat(
-                  ",",
-                  List.map(t => {tile(t)}, row),
-                )
-             ++ "]"
+             "[" ++ String.concat(",", List.map(t => {tile(t)}, row)) ++ "]"
            },
            m,
          ),
