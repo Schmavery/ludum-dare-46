@@ -1,5 +1,17 @@
 open Reprocessing;
 
+type mouse = {
+  down: bool,
+  up: bool,
+  pressed: bool,
+  pos: Point.t,
+}
+
+type state = {
+  hooks: Hooks.t,
+  mouse: mouse,
+};
+
 type id = int;
 type move = TurnRight | Forward | TurnLeft;
 type facing = Up | Down | Left | Right;
@@ -27,7 +39,15 @@ let level = [
 
 let setup = (env) => {
   Env.size(~width=600, ~height=600, env);
-  Hooks.empty;
+  {
+    hooks: Hooks.empty,
+    mouse: {
+      down: false,
+      up: false,
+      pressed: false,
+      pos: Point.fromIntPair(Env.mouse(env)),
+    },
+  }
 }
 
 let drawTile = (kind, x, y, env) => { switch (kind) {
@@ -195,6 +215,13 @@ let draw = (state, env) => {
   Hooks.initialize(state);
   let (levelStack, setLevelStack) = Hooks.useState(__LOC__, [level]);
   let currentLevel = List.hd(levelStack^);
+  let state = {
+    ...state,
+    mouse: {
+      ...state.mouse,
+      pos: Point.fromIntPair(Env.mouse(env)),
+    },
+  };
 
   if (Env.keyPressed(R, env)){
     print_endline("Reset");
@@ -217,7 +244,33 @@ let draw = (state, env) => {
     }, row);
   }, currentLevel);
 
-  Hooks.finalize();
+  {
+    hooks: Hooks.finalize(),
+    mouse: {
+      ...state.mouse,
+      down: false,
+      up: false,
+    }
+  };
 };
 
-run(~setup, ~draw, ());
+let mouseDown = (state, _) => {
+  ...state,
+  mouse: {
+    ...state.mouse,
+    down: true,
+    up: false,
+    pressed: true,
+  },
+};
+let mouseUp = (state, _) => {
+  ...state,
+  mouse: {
+    ...state.mouse,
+    down: false,
+    up: true,
+    pressed: false,
+  },
+};
+
+run(~setup, ~draw, ~mouseDown, ~mouseUp, ());
