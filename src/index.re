@@ -112,10 +112,10 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) =>  {
   let replaceWith = (level, t1, t2) =>
     Move(setLevelTile(setLevelTile(level, pos, t1), secondPos, t2));
 
-  let retryResolveMove = (level) => 
+  let retryResolveMove = (level) =>
     resolveMove(level, pos, moveDelta, true);
 
-  let resolveMove = (level, pos, moveDelta) => 
+  let resolveMove = (level, pos, moveDelta) =>
     !preResolved ? resolveMove(level, pos, moveDelta, false) : Move(level);
 
   switch (getLevelTile(level, pos), getLevelTile(level, secondPos)) {
@@ -175,19 +175,6 @@ let tick = (level) => {
     Move(level),
     movingAgents
   );
-
-  /* switch (playerMoves) { */
-  /*   | [] => Win */
-  /*   | [Forward, ...rest] => */
-  /*     // TODO: This is kinda wrong cause the player might have been moved? */
-  /*     // Ideally when we find the player we remove their first move and store it */
-  /*     // here I guess. Something like that. */
-  /*     let level = updateLevelTile(level, playerPos, (Floor(k, Player(id, f, _))) => Floor(k, Player(id, f, rest))); */
-  /*     resolveMove(level, playerPos, facingToDelta(playerFacing)); */
-  /*   | [move, ...rest] => */
-  /*     Move(updateLevelTile(level, playerPos, (Floor(k, Player(id, f, _))) => Floor(k, Player(id, turnFacing(f, move), rest)))); */
-  /* }; */
-
 };
 
 let draw = (state, env) => {
