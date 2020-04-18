@@ -42,7 +42,7 @@ let level = [
   ],
 ];
 
-let setup = env => {
+let setup = env: Common.state => {
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -255,7 +255,7 @@ let tick = level => {
 };
 
 let draw = (state, env) => {
-  Hooks.initialize(state);
+  Hooks.initialize(state.hooks);
   let (levelStack, setLevelStack) = Hooks.useState(__LOC__, [level]);
   let currentLevel = List.hd(levelStack^);
   let state = {
