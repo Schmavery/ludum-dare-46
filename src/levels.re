@@ -27,7 +27,10 @@ let emptyLevel = {
 
 let boulderWall1 = {
   title: "Boulder Wall",
-  items: [Floor(Regular, Boulder(id(), Hard))],
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
   map: [
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
     [
@@ -91,7 +94,7 @@ let boulderWall1 = {
       Floor(Regular, Empty),
       Floor(Regular, Empty),
       Pit,
-      Floor(Regular, Empty),
+      Pit,
       Wall,
       Floor(Regular, Empty),
       Wall,
@@ -113,7 +116,7 @@ let boulderWall1 = {
       Floor(Regular, Empty),
       Floor(Regular, Empty),
       Floor(Regular, Empty),
-      Floor(Regular, Empty),
+      Pit,
       Floor(Regular, Empty),
       Floor(Regular, Empty),
       Wall,
