@@ -620,7 +620,7 @@ let draw = (state, env) => {
   let (lastTickTime, setLastTickTime) =
     Hooks.useState(__LOC__, tickTimeMS +. 1.);
 
-  if (editor^ && Env.keyPressed(T, env)) {
+  if (Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
     setLastTickTime(tickTimeMS +. 1.);
