@@ -12,6 +12,7 @@ let setup = (env): state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
+    font: Draw.loadFont(~filename=fontPath, env),
   };
 };
 
@@ -297,9 +298,9 @@ let tick = level => {
   );
 };
 
-let drawMessage = (message, env) => {
+let drawMessage = (message, font, env) => {
   let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
-  let textWidth = Draw.textWidth(~body=message, env);
+  let textWidth = Draw.textWidth(~font, ~body=message, env);
   let x = (Env.width(env) - textWidth) / 2;
   Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
   Draw.rectf(
@@ -309,6 +310,7 @@ let drawMessage = (message, env) => {
     env,
   );
   Draw.text(
+    ~font,
     ~body=message,
     ~pos=(x, y),
     env,
@@ -344,9 +346,9 @@ let draw = (state, env) => {
 
   switch (levels^, gameState^) {
   | ([], _) =>
-    drawMessage("You WON the whole game", env);
+    drawMessage("You WON the whole game", state.font, env);
   | ([first, ...rest], Intro) =>
-    drawMessage("Welcome", env);
+    drawMessage("Welcome", state.font, env);
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(first));
     };
@@ -409,7 +411,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(nextLevel));
     }
     setWinMsgTimer(winTimer^ -. deltaTime);
-    drawMessage("You did it! He's safe and sound.", env)
+    drawMessage("You did it! He's safe and sound.", state.font, env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
@@ -420,10 +422,11 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(prepLevelState));
     };
     setLoseTimer(loseTimer^ -. deltaTime);
-    drawMessage("Gosh, keep him ALIVE this time will ya?", env)
+    drawMessage("Gosh, keep him ALIVE this time will ya?", state.font, env)
   };
 
   {
+    ...state,
     hooks: Hooks.finalize(),
     mouse: {
       ...state.mouse,

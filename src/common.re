@@ -1,3 +1,5 @@
+open Reprocessing
+
 let tileSizef = 50.;
 let toolbarHeight = 180.0;
 let toolbarItemRowLen = 6;
@@ -17,6 +19,7 @@ type mouse = {
 type state = {
   hooks: Hooks.t,
   mouse,
+  font: fontT,
 };
 
 type id = int;
