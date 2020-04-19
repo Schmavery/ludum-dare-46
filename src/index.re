@@ -421,7 +421,7 @@ let drawLines = (map, mapTopLeft, env) => {
                   | [prevPoint, ...rest] =>
                     switch (move) {
                     | Forward => (
-                        facing,
+                        currFacing,
                         [
                           Point.Int.add(facingToDelta(currFacing), prevPoint),
                           prevPoint,
@@ -429,7 +429,7 @@ let drawLines = (map, mapTopLeft, env) => {
                         ],
                       )
                     | turn => (
-                        turnFacing(facing, turn),
+                        turnFacing(currFacing, turn),
                         [prevPoint, ...rest],
                       )
                     }

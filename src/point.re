@@ -20,7 +20,8 @@ module Int = {
   let divScalar = ({x, y}, s) => {x: x / s, y: y / s};
   let neg = x => sub(zero, x);
   let mag = ({x, y}) => sqrt(float_of_int(x * x + y * y));
-  let print = t => Printf.printf("{x:%d,y:%d}\n%!", t.x, t.y);
+  let string = t => Printf.sprintf("{x:%d,y:%d}", t.x, t.y);
+  let print = t => print_endline(string(t));
   let ofFloatPt = t => map(t, ~f=int_of_float);
   let (+) = add;
   let (-) = sub;
@@ -39,7 +40,8 @@ module Float = {
   let divScalar = ({x, y}, s) => {x: x /. s, y: y /. s};
   let neg = x => sub(zero, x);
   let mag = ({x, y}) => sqrt(x *. x +. y *. y);
-  let print = t => Printf.printf("{x:%f,y:%f}\n%!", t.x, t.y);
+  let string = t => Printf.sprintf("{x:%f,y:%f}", t.x, t.y);
+  let print = t => print_endline(string(t));
   let ofIntPt = t => map(t, ~f=float_of_int);
   let (+) = add;
   let (-) = sub;
