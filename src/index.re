@@ -28,18 +28,16 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
   switch (kind) {
   | Floor(kind, obj) =>
     switch (kind) {
-    | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env);
+    | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
     // TODO: Differentiate the filled pit vs floor.
-    | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env);
+    | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env)
     };
     switch (obj) {
-    | Player(_, facing, _) => {
+    | Player(_, facing, _) =>
       // TODO: rotate player
       // switch (facing) {
-
       // };
-      Assets.drawSprite(spriteData, "main_character", ~pos, env);
-    }
+      Assets.drawSprite(spriteData, "main_character", ~pos, env)
     | Boulder(_, health) =>
       switch (health) {
       | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
@@ -47,8 +45,8 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
       }
     | Empty => ()
     };
-  | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env);
-  | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env);
+  | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env)
+  | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env)
   };
 };
 
@@ -62,8 +60,18 @@ let getInventoryTopLeft = env => {
 };
 
 let getMapTopLeft = (map, env) => {
-  Point.x: Env.width(env)->float_of_int /. 2. -. (List.length(List.hd(map))->float_of_int *. tileSizef) /. 2.,
-        y: Env.height(env)->float_of_int /. 2. -. (List.length(map)->float_of_int *. tileSizef /. 2.)
+  Point.x:
+    Env.width(env)->float_of_int
+    /. 2.
+    -. List.length(List.hd(map))->float_of_int
+    *. tileSizef
+    /. 2.,
+  y:
+    (Env.height(env)->float_of_int -. toolbarHeight)
+    /. 2.
+    -. List.length(map)->float_of_int
+    *. tileSizef
+    /. 2.,
 };
 
 let getHoveredMapSquare = (map, env) => {
@@ -110,7 +118,12 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
           spriteData,
           env,
         );
-        drawTile(Pit, Point.Float.add(topleft, relativePos), spriteData, env);
+        drawTile(
+          Pit,
+          Point.Float.add(topleft, relativePos),
+          spriteData,
+          env,
+        );
       } else {
         drawTile(
           item,
@@ -469,12 +482,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(prepLevelState));
     };
     setLoseTimer(loseTimer^ -. deltaTime);
-    drawMessage(
-      "Gosh, keep him ALIVE",
-      toolbarHeight,
-      state.font,
-      env,
-    );
+    drawMessage("Gosh, keep him ALIVE", toolbarHeight, state.font, env);
     drawMessage(
       "next time, will ya?",
       toolbarHeight -. 90.,
