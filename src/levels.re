@@ -21,7 +21,7 @@ let editorItemList = [
 let emptyLevel = {
   title: "Tutorial",
   items: editorItemList,
-  map: Serialize.emptyMap(11, 11),
+  map: Serialize.emptyMap(10, 6),
 };
 
 let boulderPitTutorial = {
@@ -1118,14 +1118,106 @@ let ambiguousPath3 = {
   ],
 };
 
+let small1 = {
+  title: "Tight Quarters",
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(
+        Regular,
+        Player(
+          id(),
+          Right,
+          [
+            TurnRight,
+            Forward,
+            TurnLeft,
+            Forward,
+            Forward,
+            TurnRight,
+            Forward,
+            TurnLeft,
+            Forward,
+            Forward,
+            Forward,
+            TurnLeft,
+            Forward,
+            TurnRight,
+            Forward,
+            TurnRight,
+            Forward,
+            TurnLeft,
+            Forward,
+            TurnRight,
+            Forward,
+          ],
+        ),
+      ),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Wall,
+    ],
+    [
+      Wall,
+      Wall,
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Boulder(id(), Hard)),
+      Floor(Regular, Boulder(id(), Hard)),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
+};
+
 let all = [
   boulderPitTutorial,
   placeBoulderTutorial,
   boulderWall1,
+  small1,
   dontbreak1,
   dontbreak2,
   ambiguousPath1,
   ambiguousPath2,
   ambiguousPath3,
 ];
-// let all = [ambiguousPath1, ambiguousPath2, ambiguousPath3];
+// let all = [small1];
