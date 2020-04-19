@@ -23,7 +23,7 @@ let editorItemList = [
 let emptyLevel = {
   title: "Tutorial",
   items: editorItemList,
-  map: Serialize.emptyMap(10, 8),
+  map: Serialize.emptyMap(7, 7),
 };
 
 let boulderPitTutorial = {
@@ -113,6 +113,158 @@ let placeBoulderTutorial = {
       Wall,
     ],
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
+};
+
+let multiPitTutorial = {
+  title: "Multi pit tutorial",
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Floor(
+        Regular,
+        Player(
+          id(),
+          Left,
+          [
+            Forward,
+            TurnRight,
+            Forward,
+            Forward,
+            TurnLeft,
+            Forward,
+            TurnLeft,
+            Forward,
+            Forward,
+            Forward,
+            Forward,
+            TurnRight,
+            Forward,
+          ],
+        ),
+      ),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
+};
+
+let multiPushBoulderTutorial = {
+  title: "Multi boulder push tutorial",
+  items: [
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+    Floor(Regular, Boulder(id(), Hard)),
+  ],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(
+        Regular,
+        Player(
+          id(),
+          Left,
+          [
+            Forward,
+            Forward,
+            TurnRight,
+            Forward,
+            Forward,
+            Forward,
+            TurnLeft,
+            Forward,
+            TurnLeft,
+            Forward,
+            Forward,
+            Forward,
+            Forward,
+          ],
+        ),
+      ),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Pit,
+      Pit,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
   ],
 };
 
@@ -1435,9 +1587,68 @@ let withAFriend = {
   ],
 };
 
+let rotateTutorial = {
+  title: "Rotate Tutorial",
+  items: [Floor(Spinner(CCW), Empty)],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+      Pit,
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Boulder(id(), Hard)),
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(
+        Regular,
+        Player(id(), Right, [Forward, Forward, Forward, Forward]),
+      ),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
+};
+
 let all = [
   boulderPitTutorial,
   placeBoulderTutorial,
+  multiPitTutorial,
+  multiPushBoulderTutorial,
   boulderWall1,
   small1,
   dontbreak1,
@@ -1446,6 +1657,8 @@ let all = [
   ambiguousPath1,
   ambiguousPath2,
   ambiguousPath3,
+  rotateTutorial,
   withAFriend,
 ];
-// let all = [withAFriend];
+
+// let all = [rotateTutorial];
