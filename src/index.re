@@ -399,16 +399,16 @@ let turnFacing = (facing, move) => {
   };
 };
 
-let rec resolveMove = (level, pos, moveDelta, preResolved) => {
+let rec resolveMove = (level, pos, moveDelta, retrying) => {
   let secondPos = Point.Int.add(pos, moveDelta);
   let replaceWith = (level, t1, t2) =>
     Move(setMapTile(setMapTile(level, pos, t1), secondPos, t2));
 
   let retryResolveMove = level =>
-    !preResolved ? resolveMove(level, pos, moveDelta, true) : Move(level);
+    !retrying ? resolveMove(level, pos, moveDelta, true) : Move(level);
 
   let resolveMove = (level, pos, moveDelta) =>
-    !preResolved ? resolveMove(level, pos, moveDelta, false) : Move(level);
+    !retrying ? resolveMove(level, pos, moveDelta, false) : Move(level);
 
   switch (getMapTile(level, pos), getMapTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
@@ -429,7 +429,7 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
       Floor(Spinner(dir), Player(id, facing, moves)),
       Floor(k, Boulder(id2, boulderState)),
     )
-      when preResolved =>
+      when retrying =>
     let move = dir == CW ? TurnRight : TurnLeft;
     let obj = boulderState == Hard ? Boulder(id2, Cracked) : Empty;
     replaceWith(
@@ -442,10 +442,9 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
   | (Floor(_, Player(_)), Wall)
   | (Floor(_, Player(_)), Pit) => Lose
   | (Floor(k1, Player(_) as p), Floor(k2, Boulder(_, Cracked)))
-      when preResolved =>
+      when retrying =>
     replaceWith(level, Floor(k1, p), Floor(k2, Empty))
-  | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, Hard)))
-      when preResolved =>
+  | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, Hard))) when retrying =>
     replaceWith(level, Floor(k1, p), Floor(k2, Boulder(id, Cracked)))
   | (Floor(k1, Player(_) | Boulder(_, _)), Floor(k2, Boulder(_))) =>
     switch (resolveMove(level, secondPos, moveDelta)) {
