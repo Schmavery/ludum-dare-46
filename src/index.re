@@ -179,11 +179,12 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       let y = (tileSizef +. btnMargin) *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
       if (Some(i) == hovered) {
-        drawTile(
-          Pit,
-          ~noBackground=true,
-          Point.Float.add(topleft, relativePos),
-          spriteData,
+        let newPos = Point.Float.add(topleft, relativePos);
+        Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+        Draw.rectf(
+          ~pos=(newPos.x, newPos.y),
+          ~width=tileSizef,
+          ~height=tileSizef,
           env,
         );
       } else {
@@ -438,7 +439,6 @@ let draw = (state, env) => {
       | (Some(i), _, None) => levelCurrentState
       | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
       | (_, Some((x, y)), Some(draggedI)) =>
-        print_endline("Dropped on tile");
         setDragging(None);
         {
           ...levelCurrentState,
