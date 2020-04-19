@@ -39,8 +39,8 @@ let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, ~height=tileSizef, ~widt
       spriteData,
       assetName,
       ~pos,
-      ~width=tileSizef,
-      ~height=tileSizef,
+      ~width=width,
+      ~height=height,
       env,
     );
   | Boulder(_, health) =>
@@ -628,9 +628,7 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
         0.
       };
 
-    let bounceY = abs_float(bounceY) *. -1.0;
-
-    Point.Float.(create(0., bounceY));
+    abs_float(bounceY) *. -1.0;
   };
   switch (previousLevel) {
   | None =>
@@ -691,17 +689,32 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
 
                 let animatedPosition =
                   Point.Float.create(animatingPosX, animatingPosY);
-                let bouncedPosition =
+                let bounceY =
                   switch (tile) {
                   | Floor(_, Player(_, _, _)) =>
                     calculateBounce(elapsedTime, pos, prevPos)
-                  | _ => Point.Float.create(0., 0.)
+                  | _ => 0.
                   };
+
+                let squishY =
+                  switch (tile) {
+                  | Floor(_, Player(_, _, _)) => tileSizef -. (bounceY *. -0.75)
+                  | _ => tileSizef
+                  };
+                let squishX =
+                  switch (tile) {
+                  | Floor(_, Player(_, _, _)) => tileSizef +. (bounceY *. -0.75)
+                  | _ => tileSizef
+                  };
+
+                let bouncedPosition = Point.Float.create(0., bounceY);
 
                 drawObj(
                   ~obj,
                   ~pos=Point.Float.(animatedPosition + bouncedPosition),
                   ~spriteData,
+                  ~height=squishY,
+                  ~width=squishX,
                   env,
                 );
                 ();
