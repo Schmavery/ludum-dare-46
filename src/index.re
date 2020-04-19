@@ -536,6 +536,30 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
     let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
     drawObj(~obj, ~pos, ~spriteData, env);
   };
+  let calculateBounce = (elapsedTime, pos:Point.Float.t, prevPos:Point.Float.t) => {
+    let numBounces = 2.;
+    // TODO: There's something we could do here to ease more proportionally.
+    let time = easeInOutQuad(elapsedTime/.tickTimeMS);
+
+    let bounce = Utils.remapf(
+      ~value=time,
+      ~low1=0.,
+      ~high1=1.0,
+      ~low2=0.,
+      ~high2=numBounces*.Constants.pi,
+    );
+
+    // If we're moving in the x position, we need to calculate gravity from a Y perspective
+    let bounceY = if (prevPos.x != pos.x) { sin(bounce) *. 6. } else { 0. };
+
+    // If we're moving in the y position, we need to calculate gravity from the X perspective
+    let bounceX = if (prevPos.y != pos.y ) { sin(bounce) *. 6. } else { 0. };
+
+    let bounceX = abs_float(bounceX) *. -1.0;
+    let bounceY = abs_float(bounceY) *. -1.0;
+
+    Point.Float.(create(bounceX, bounceY));
+  };
   switch (previousLevel) {
   | None =>
     List.iteri(
@@ -573,7 +597,9 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
                 let prevP = Point.Int.create(x, y);
                 let prevPos =
                   Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
+                let elapsedTime = time;
                 let time = easeInOutQuad(time /. tickTimeMS);
+
                 let animatingPosX =
                   Utils.remapf(
                     ~value=time,
@@ -591,9 +617,16 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
                     ~high2=pos.y,
                   );
 
+                let animatedPosition = Point.Float.create(animatingPosX, animatingPosY);
+                let bouncedPosition = switch(tile) {
+                  | Floor(_, Player(_, _, _)) =>
+                    calculateBounce(elapsedTime, pos, prevPos);
+                  | _ => Point.Float.create(0., 0.);
+                };
+
                 drawObj(
                   ~obj,
-                  ~pos=Point.create(animatingPosX, animatingPosY),
+                  ~pos=Point.Float.(animatedPosition + bouncedPosition),
                   ~spriteData,
                   env,
                 );
