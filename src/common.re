@@ -6,6 +6,25 @@ let tickTimeMS = 500.0;
 let loseMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
+module StringMap = Map.Make(String);
+
+
+module Sprite = {
+  type spriteEntry = {
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+  };
+
+  type t = {
+    sheet: Reprocessing.imageT,
+    map: StringMap.t(spriteEntry),
+  };
+
+  let create = (sheet, map) => { sheet, map };
+};
+
 type mouse = {
   down: bool,
   up: bool,
@@ -16,6 +35,7 @@ type mouse = {
 type state = {
   hooks: Hooks.t,
   mouse,
+  sprites: Sprite.t
 };
 
 type id = int;

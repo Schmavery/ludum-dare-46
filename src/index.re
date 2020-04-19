@@ -1,8 +1,10 @@
 open Common;
 open Reprocessing;
 
-let setup = (env): state => {
+let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
+  let spritesheetLocation = "assets/spritesheet/spritesheet.png";
+
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -12,14 +14,18 @@ let setup = (env): state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
+    sprites: Sprite.create(
+        Draw.loadImage(~filename=spritesheetLocation, env),
+        spriteData,
+      ),
   };
 };
 
-let drawTile = (kind, {x, y}: Point.Float.t, env) => {
+let drawTile = (kind, {x, y}: Point.Float.t, spriteData, env) => {
   switch (kind) {
   | Floor(kind, obj) =>
     switch (kind) {
-    | Regular => Draw.fill(Utils.color(~r=41, ~g=166, ~b=244, ~a=255), env)
+    | Regular => Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
     | FilledPit(_) =>
       Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
     };
@@ -91,7 +97,7 @@ let getHoveredInventoryIndex = (mousePos, env) => {
   x + y * toolbarItemRowLen;
 };
 
-let drawInventory = (inventory, env) => {
+let drawInventory = (inventory, spriteData, env) => {
   let topleft = getInventoryTopLeft(env);
   List.iteri(
     (i, item) => {
@@ -112,7 +118,7 @@ let drawInventory = (inventory, env) => {
   );
 };
 
-let drawToolbar = (inventory, env) => {
+let drawToolbar = (inventory, spriteData, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
@@ -137,7 +143,7 @@ let drawToolbar = (inventory, env) => {
     env,
   );
 
-  drawInventory(inventory, env);
+  drawInventory(inventory, spriteData, env);
 };
 
 let getLevelTile = (level, {x, y}: Point.Int.t) => {
@@ -313,13 +319,13 @@ let drawMessage = (message, env) => {
   );
 }
 
-let drawMap = (map, env) => {
+let drawMap = (map, spriteData, env) => {
   List.iteri(
     (y, row) => {
       List.iteri(
         (x, tile) => {
           let p = Point.Int.create(x, y);
-          drawTile(tile, Point.Float.(ofIntPt(p) *@ tileSizef), env);
+          drawTile(tile, Point.Float.(ofIntPt(p) *@ tileSizef), spriteData, env);
         },
         row,
       )
@@ -358,8 +364,8 @@ let draw = (state, env) => {
     if (Env.keyPressed(Space, env)) {
       setGameState(RunningLevel([levelCurrentState]));
     };
-    drawMap(levelCurrentState.map, env);
-    drawToolbar(levelCurrentState.items, env);
+    drawMap(levelCurrentState.map, spriteData, env);
+    drawInventory(levelCurrentState.items, spriteData, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -396,13 +402,13 @@ let draw = (state, env) => {
     } else {
       setLastTickTime(lastTickTime^ +. deltaTime);
     };
-    drawMap(levelCurrentState.map, env);
-    drawToolbar([], env); // TODO: Any items?
+    drawMap(levelCurrentState.map, spriteData, env);
+    drawToolbar([], spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));
     };
-    drawMap(level.map, env);
+    drawMap(level.map, spriteData, env);
     Draw.text(~body="You WIN", ~pos=(100, 100), env);
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
@@ -446,4 +452,7 @@ let mouseUp = (state, _) => {
   },
 };
 
-run(~setup, ~draw, ~mouseDown, ~mouseUp, ());
+Assets.loadSpriteSheet("assets/spritesheet/sprites.json", (assets) => 
+  run(~setup, ~draw, ~mouseDown, ~mouseUp, ())
+);
+
