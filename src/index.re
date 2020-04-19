@@ -23,44 +23,32 @@ let setup = (spriteData, env): Common.state => {
 };
 
 let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
+  let halfTileSize = tileSizef /. 2.;
+  let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (kind) {
   | Floor(kind, obj) =>
     switch (kind) {
-    | Regular => Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
-    | FilledPit(_) =>
-      Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
+    | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env);
+    // TODO: Differentiate the filled pit vs floor.
+    | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env);
     };
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
     switch (obj) {
-    | Player(_, _, _) =>
-      Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=255), env);
-      let halfTileSize = tileSizef /. 2.;
-      Draw.ellipsef(
-        ~center=(x +. halfTileSize, y +. halfTileSize),
-        ~radx=halfTileSize,
-        ~rady=halfTileSize,
-        env,
-      );
-    | Boulder(_, health) => {
-      let halfTileSize = tileSizef /. 2.;
-      let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
-      switch (health) {
-        | Hard => {
-          Assets.drawSprite(spriteData, "normal_boulder", ~pos, env);
-        }
-        | Cracked => {
-          Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env);
-        }
-      };
+    | Player(_, facing, _) => {
+      // TODO: rotate player
+      // switch (facing) {
+
+      // };
+      Assets.drawSprite(spriteData, "main_character", ~pos, env);
     }
+    | Boulder(_, health) =>
+      switch (health) {
+      | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
+      | Cracked => Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env)
+      }
     | Empty => ()
     };
-  | Pit =>
-    Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=255), env);
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
-  | Wall =>
-    Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
-    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
+  | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env);
+  | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env);
   };
 };
 
@@ -74,7 +62,7 @@ let getInventoryTopLeft = env => {
 };
 
 let getMapTopLeft = (map, env) => {
-  Point.x: Env.width(env)->float_of_int /. 2. -. (List.length(List.hd(map))->float_of_int *. tileSizef) /. 2., 
+  Point.x: Env.width(env)->float_of_int /. 2. -. (List.length(List.hd(map))->float_of_int *. tileSizef) /. 2.,
         y: Env.height(env)->float_of_int /. 2. -. (List.length(map)->float_of_int *. tileSizef /. 2.)
 };
 
