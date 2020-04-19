@@ -54,6 +54,7 @@ let drawTile =
       kind,
       {x, y}: Point.Float.t,
       ~noBackground=false,
+      ~withObj=false,
       spriteData: Sprite.t,
       env,
     ) => {
@@ -68,7 +69,10 @@ let drawTile =
       | FilledPit(_) =>
         Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
       };
-    }
+    };
+    if (withObj) {
+      drawObj(~obj, ~pos={x, y}, ~spriteData, env);
+    };
   | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env)
   | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env)
   };
@@ -190,6 +194,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       drawTile(
         item,
         ~noBackground=true,
+        ~withObj=true,
         Point.Float.add(topleft, relativePos),
         spriteData,
         env,
@@ -594,7 +599,7 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
           row,
         )
       },
-      level,
+      previousLevel,
     )
   };
 };
@@ -682,6 +687,7 @@ let draw = (state, env) => {
           List.nth(levelCurrentState.items, i),
           Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
           ~noBackground=true,
+          ~withObj=true,
           state.spriteData,
           env,
         ),
@@ -695,28 +701,30 @@ let draw = (state, env) => {
         [levelCurrentState, ...pastLevelStates] as allLevelStates,
       ),
     ) =>
+    // This value always starts at MAX so we tick once immediately
     let (lastTickTime, setLastTickTime) =
-      Hooks.useState(__LOC__, tickTimeMS);
+      Hooks.useState(__LOC__, tickTimeMS +. 1.);
 
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
-      setLastTickTime(tickTimeMS);
+      setLastTickTime(tickTimeMS +. 1.);
     };
 
-    let pastLevelStates =
+    let (pastLevelStates, levelCurrentState) =
       if (lastTickTime^ > tickTimeMS) {
         switch (tick(levelCurrentState.map)) {
         | Move(level) =>
           setLastTickTime(0.0);
+          let newLevelState = {...levelCurrentState, map: level};
           setGameState(
             RunningLevel([
-              {...levelCurrentState, map: level},
+              newLevelState,
               levelCurrentState,
               ...pastLevelStates,
             ]),
           );
-          [levelCurrentState, ...pastLevelStates];
+          ([levelCurrentState, ...pastLevelStates], newLevelState);
         | Win =>
           if (editor^) {
             setGameState(
@@ -728,29 +736,36 @@ let draw = (state, env) => {
             setLevels(restOfLevels);
             setGameState(WinLevel(levelCurrentState));
           };
-          setLastTickTime(tickTimeMS);
-          pastLevelStates;
+          setLastTickTime(tickTimeMS +. 1.);
+          (pastLevelStates, levelCurrentState);
         | Lose =>
           setGameState(
             LoseLevel(
               List.nth(allLevelStates, List.length(allLevelStates) - 1),
             ),
           );
-          setLastTickTime(tickTimeMS);
-          pastLevelStates;
+          setLastTickTime(tickTimeMS +. 1.);
+          (pastLevelStates, levelCurrentState);
         };
       } else {
         setLastTickTime(lastTickTime^ +. deltaTime);
-        pastLevelStates;
+        (pastLevelStates, levelCurrentState);
       };
-    drawMap(levelCurrentState.map, state.spriteData, env);
-    drawObjects(
-      ~previousLevel=?List.nth_opt(pastLevelStates, 0),
-      ~time=lastTickTime^,
-      levelCurrentState.map,
-      state.spriteData,
-      env,
-    );
+    switch (List.nth_opt(pastLevelStates, 0)) {
+    | None =>
+      failwith(
+        "There was only one level in the stack of levels, should not happen",
+      ) // WEIRD
+    | Some(pastLevel) =>
+      drawMap(pastLevel.map, state.spriteData, env);
+      drawObjects(
+        ~previousLevel=pastLevel,
+        ~time=lastTickTime^,
+        levelCurrentState.map,
+        state.spriteData,
+        env,
+      );
+    };
     drawToolbar([], state.spriteData, None, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
