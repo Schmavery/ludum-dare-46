@@ -22,7 +22,7 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawTile = (kind, {x, y}: Point.Float.t, spriteData, env) => {
+let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
   switch (kind) {
   | Floor(kind, obj) =>
     switch (kind) {
@@ -41,18 +41,18 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData, env) => {
         ~rady=halfTileSize,
         env,
       );
-    | Boulder(_, health) =>
-      switch (health) {
-      | Hard => Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env)
-      | Cracked => Draw.fill(Utils.color(~r=100, ~g=50, ~b=50, ~a=255), env)
-      };
+    | Boulder(_, health) => {
       let halfTileSize = tileSizef /. 2.;
-      Draw.ellipsef(
-        ~center=(x +. halfTileSize, y +. halfTileSize),
-        ~radx=halfTileSize,
-        ~rady=halfTileSize,
-        env,
-      );
+      let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
+      switch (health) {
+        | Hard => {
+          Assets.drawSprite(spriteData, "normal_boulder", ~pos, env);
+        }
+        | Cracked => {
+          Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env);
+        }
+      };
+    }
     | Empty => ()
     };
   | Pit =>
@@ -309,6 +309,7 @@ let drawMessage = (message, offset, font, env) => {
     env,
   );
   Draw.text(~font, ~body=message, ~pos=(x, y), env);
+  Draw.noTint(env);
 };
 
 let drawMap = (map, spriteData, env) => {
@@ -418,7 +419,7 @@ let draw = (state, env) => {
       env,
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
-    drawMap(prepLevelState.map, env);
+    drawMap(prepLevelState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;

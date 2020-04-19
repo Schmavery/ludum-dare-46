@@ -70,7 +70,7 @@ let placeholder = (name, ~pos, ~width, ~height, env) => {
   );
 };
 
-let drawSprite = (t, name, ~pos, ~scale=1.0, env) => {
+let drawSprite = (t, name, ~pos, ~scale=0.4166, env) => {
   switch (StringMap.find(name, t.Sprite.map)) {
   | {x, y, w, h} =>
     let width = float_of_int(w) *. scale;
