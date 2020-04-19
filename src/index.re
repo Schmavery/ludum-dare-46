@@ -389,7 +389,7 @@ let draw = (state, env) => {
     Draw.text(~body="You WIN", ~pos=(100, 100), env);
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
-    drawControls(env);
+    drawToolbar([], env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (loseTimer^ < 0.0) {
