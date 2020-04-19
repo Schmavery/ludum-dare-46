@@ -536,12 +536,11 @@ let draw = (state, env) => {
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
 
-    let inventory = editor^ ? Levels.editorItemList : levelCurrentState.items;
-    drawToolbar(inventory, state.spriteData, dragging^, env);
+    drawToolbar(levelCurrentState.items, state.spriteData, dragging^, env);
     Option.iter(
       i =>
         drawTile(
-          List.nth(inventory, i),
+          List.nth(levelCurrentState.items, i),
           Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
           ~noBackground=true,
           state.spriteData,
