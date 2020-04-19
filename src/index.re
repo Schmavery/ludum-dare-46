@@ -506,7 +506,7 @@ let findInMap = (level, withId) => {
       List.iteri(
         (x, tile) => {
           switch (tile) {
-          | Floor(FilledPit(id), _) =>
+          | Floor(FilledPit(id), _) when id == withId =>
             cur := Some((Point.create(x, y), None))
           | Floor(_, Boulder(id, _) as obj)
           | Floor(_, Player(id, _, _) as obj) when id === withId =>
