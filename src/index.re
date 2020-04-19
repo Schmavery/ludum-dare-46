@@ -48,7 +48,7 @@ let drawTile =
       // TODO: rotate player
       // switch (facing) {
       // };
-      Assets.drawSprite(spriteData, "main_character", ~pos, env)
+      Assets.drawSprite(spriteData, "guy_right", ~pos, env)
     | Boulder(_, health) =>
       switch (health) {
       | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
