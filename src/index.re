@@ -2,7 +2,7 @@ open Common;
 open Reprocessing;
 
 let setup = (env): state => {
-  let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
+  let fontPath = "assets/font/ptsans_regular_2x.fnt";
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -411,7 +411,8 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(nextLevel));
     }
     setWinMsgTimer(winTimer^ -. deltaTime);
-    drawMessage("You did it! He's safe and sound.", toolbarHeight, state.font, env)
+    drawMessage("You did it!", toolbarHeight, state.font, env)
+    drawMessage("He's safe and sound.", toolbarHeight -. 90., state.font, env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
