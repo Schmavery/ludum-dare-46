@@ -124,7 +124,7 @@ let drawTile =
         ~pos,
         ~width=tileSizef,
         ~height=tileSizef,
-        ~rot=time,
+        ~rot=dir == CW ? time : -. time,
         env,
       );
     };
