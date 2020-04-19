@@ -3,6 +3,7 @@ let toolbarHeight = 180.0;
 let toolbarItemRowLen = 6;
 let btnMargin = 20.0;
 let tickTimeMS = 500.0;
+let loseMsgTimeMS = 1500.0;
 
 type mouse = {
   down: bool,
@@ -54,6 +55,6 @@ type tick =
 type gameState =
   | Intro
   | WinLevel(level)
-  | LoseLevel
+  | LoseLevel(level)
   | RunningLevel(list(level))
   | PreparingLevel(level);

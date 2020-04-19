@@ -103,13 +103,22 @@ let drawInventory = (inventory, env) => {
   );
 
   // let width = float_of_int();
-  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0
+  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0;
 
-  List.iteri((i, item) => {
-    let x = (xOffset +. float_of_int(i mod Common.toolbarItemRowLen) *. (Common.tileSizef +. Common.btnMargin));
-    let y = backgroundY +. (Common.tileSizef +. Common.btnMargin) *. float_of_int(i / Common.toolbarItemRowLen);
-    drawTile(item, x, y, env)
-  }, inventory);
+  List.iteri(
+    (i, item) => {
+      let x =
+        xOffset
+        +. float_of_int(i mod Common.toolbarItemRowLen)
+        *. (Common.tileSizef +. Common.btnMargin);
+      let y =
+        backgroundY
+        +. (Common.tileSizef +. Common.btnMargin)
+        *. float_of_int(i / Common.toolbarItemRowLen);
+      drawTile(item, x, y, env);
+    },
+    inventory,
+  );
 };
 
 let drawControls = env => {
@@ -346,15 +355,18 @@ let draw = (state, env) => {
             levelCurrentState,
             ...pastLevelStates,
           ]),
-        )
+        );
       | Win =>
         setLevels(restOfLevels);
         setGameState(WinLevel(levelCurrentState));
         setLastTickTime(0.0);
-      | Lose => {
-        setGameState(LoseLevel);
+      | Lose =>
+        setGameState(
+          LoseLevel(
+            List.nth(pastLevelStates, List.length(pastLevelStates) - 1),
+          ),
+        );
         setLastTickTime(0.0);
-      }
       };
     } else {
       setLastTickTime(lastTickTime^ +. deltaTime);
@@ -367,11 +379,29 @@ let draw = (state, env) => {
     };
     drawMap(level.map, env);
     Draw.text(~body="You WIN", ~pos=(100, 100), env);
-  | ([initialLevel, ..._], LoseLevel) =>
-    if (Env.keyPressed(Space, env)) {
-      setGameState(PreparingLevel(initialLevel));
+  | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
+    drawMap(prepLevelState.map, env);
+    drawControls(env);
+    let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
+    let deltaTime = Env.deltaTime(env) *. 1000.0;
+    if (loseTimer^ < 0.0) {
+      setLoseTimer(loseMsgTimeMS);
+      setGameState(PreparingLevel(prepLevelState));
     };
-    Draw.text(~body="You LOSE", ~pos=(100, 100), env);
+    setLoseTimer(loseTimer^ -. deltaTime);
+    let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
+    Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+    Draw.rectf(
+      ~pos=(0.0, 0.0),
+      ~width=float_of_int(Env.width(env)),
+      ~height=float_of_int(Env.height(env)),
+      env,
+    );
+    Draw.text(
+      ~body="Gosh, keep him ALIVE this time will ya?",
+      ~pos=(20, y),
+      env,
+    );
   };
 
   {
