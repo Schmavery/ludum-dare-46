@@ -23,7 +23,7 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, env) => {
+let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, ~height=tileSizef, ~width=tileSizef, env) => {
   let halfTileSize = tileSizef /. 2.;
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (obj) {
@@ -541,15 +541,17 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
     );
 
     // If we're moving in the x position, we need to calculate gravity from a Y perspective
-    let bounceY = if (prevPos.x != pos.x) { sin(bounce) *. 6. } else { 0. };
+    let bounceY = if (prevPos.x != pos.x) { 
+        sin(bounce) *. 6. 
+      } else if (prevPos.y != pos.y) { 
+        sin(bounce) *. 6.
+      } else {
+        0.
+      };
 
-    // If we're moving in the y position, we need to calculate gravity from the X perspective
-    let bounceX = if (prevPos.y != pos.y ) { sin(bounce) *. 6. } else { 0. };
-
-    let bounceX = abs_float(bounceX) *. -1.0;
     let bounceY = abs_float(bounceY) *. -1.0;
 
-    Point.Float.(create(bounceX, bounceY));
+    Point.Float.(create(0., bounceY));
   };
   switch (previousLevel) {
   | None =>
