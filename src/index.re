@@ -1,7 +1,7 @@
 open Common;
 open Reprocessing;
 
-let editor = ref(true);
+let editor = ref(false);
 
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
@@ -506,10 +506,11 @@ let findInMap = (level, withId) => {
       List.iteri(
         (x, tile) => {
           switch (tile) {
-          | Floor(FilledPit(id), _)
-          | Floor(_, Boulder(id, _))
-          | Floor(_, Player(id, _, _)) when id === withId =>
-            cur := Some(Point.create(x, y))
+          | Floor(FilledPit(id), _) =>
+            cur := Some((Point.create(x, y), None))
+          | Floor(_, Boulder(id, _) as obj)
+          | Floor(_, Player(id, _, _) as obj) when id === withId =>
+            cur := Some((Point.create(x, y), Some(obj)))
           | _ => ()
           }
         },
@@ -562,7 +563,12 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
             | Floor(_, Player(id, _, _) as obj) =>
               switch (findInMap(level, id)) {
               | None => drawHelper(x, y, obj)
-              | Some(p) =>
+              | Some((p, newObj)) =>
+                let obj =
+                  switch (newObj) {
+                  | Some(o) => o
+                  | None => obj
+                  };
                 let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
                 let prevP = Point.Int.create(x, y);
                 let prevPos =
@@ -708,10 +714,6 @@ let draw = (state, env) => {
       ),
     ) =>
     let deltaTime = Env.deltaTime(env) *. 1000.0;
-    if (Env.keyPressed(R, env)) {
-      setGameState(PreparingLevel(levelInitialState));
-      setLastTickTime(tickTimeMS +. 1.);
-    };
 
     let (pastLevelStates, levelCurrentState) =
       if (lastTickTime^ > tickTimeMS) {
@@ -769,6 +771,10 @@ let draw = (state, env) => {
       );
     };
     drawToolbar([], state.spriteData, None, env); // TODO: Any items?
+    if (Env.keyPressed(R, env)) {
+      setGameState(PreparingLevel(levelInitialState));
+      setLastTickTime(tickTimeMS +. 1.);
+    };
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
     drawObjects(level.map, state.spriteData, env);
