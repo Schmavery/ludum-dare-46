@@ -2,6 +2,7 @@ open Common;
 open Reprocessing;
 
 let setup = (env): state => {
+  let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
