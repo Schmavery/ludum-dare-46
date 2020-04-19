@@ -304,8 +304,8 @@ let tick = level => {
   );
 };
 
-let drawMessage = (message, font, env) => {
-  let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
+let drawMessage = (message, offset, font, env) => {
+  let y = (Env.height(env) - int_of_float(offset) - fontHeight) / 2;
   let textWidth = Draw.textWidth(~font, ~body=message, env);
   let x = (Env.width(env) - textWidth) / 2;
   Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
@@ -352,9 +352,9 @@ let draw = (state, env) => {
 
   switch (levels^, gameState^) {
   | ([], _) =>
-    drawMessage("You WON the whole game", state.font, env);
+    drawMessage("You WON the whole game", 0.0, state.font, env);
   | ([first, ...rest], Intro) =>
-    drawMessage("Welcome", state.font, env);
+    drawMessage("Welcome", 0.0, state.font, env);
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(first));
     };
@@ -409,7 +409,7 @@ let draw = (state, env) => {
     drawMap(levelCurrentState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
-    drawMap(level.map, spriteData, env);
+    drawMap(level.map, state.spriteData, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
@@ -417,7 +417,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(nextLevel));
     }
     setWinMsgTimer(winTimer^ -. deltaTime);
-    drawMessage("You did it! He's safe and sound.", state.font, env)
+    drawMessage("You did it! He's safe and sound.", toolbarHeight, state.font, env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
@@ -428,7 +428,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(prepLevelState));
     };
     setLoseTimer(loseTimer^ -. deltaTime);
-    drawMessage("Gosh, keep him ALIVE this time will ya?", state.font, env)
+    drawMessage("Gosh, keep him ALIVE this time will ya?", toolbarHeight, state.font, env)
   };
 
   {
