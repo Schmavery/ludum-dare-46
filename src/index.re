@@ -27,6 +27,28 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
+let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, env) => {
+  let halfTileSize = tileSizef /. 2.;
+  let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
+  switch (obj) {
+  | Player(_, facing, _) =>
+    let assetName =
+      switch (facing) {
+      | Up => "guy_up"
+      | Down => "guy_down"
+      | Right => "guy_right"
+      | Left => "guy_left"
+      };
+    Assets.drawSprite(spriteData, assetName, ~pos, env);
+  | Boulder(_, health) =>
+    switch (health) {
+    | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
+    | Cracked => Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env)
+    }
+  | Empty => ()
+  };
+};
+
 let drawTile =
     (
       kind,
@@ -46,24 +68,7 @@ let drawTile =
       | FilledPit(_) =>
         Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
       };
-    };
-    switch (obj) {
-    | Player(_, facing, _) =>
-      let assetName =
-        switch (facing) {
-        | Up => "guy_up"
-        | Down => "guy_down"
-        | Right => "guy_right"
-        | Left => "guy_left"
-        };
-      Assets.drawSprite(spriteData, assetName, ~pos, env);
-    | Boulder(_, health) =>
-      switch (health) {
-      | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
-      | Cracked => Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env)
-      }
-    | Empty => ()
-    };
+    }
   | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env)
   | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env)
   };
@@ -181,7 +186,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       let relativePos = Point.create(x, y);
       if (Some(i) == hovered) {
         Draw.tint(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
-      }
+      };
       drawTile(
         item,
         ~noBackground=true,
@@ -191,7 +196,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       );
       if (Some(i) == hovered) {
         Draw.noTint(env);
-      }
+      };
     },
     inventory,
   );
@@ -406,17 +411,24 @@ let drawLines = (map, mapTopLeft, env) => {
           | Floor(_, Player(id, facing, moves)) =>
             let (_, mapPositions) =
               List.fold_left(
-                ((currFacing, [prevPoint, ...rest]), move) =>
-                  switch (move) {
-                  | Forward => (
-                      facing,
-                      [
-                        Point.Int.add(facingToDelta(currFacing), prevPoint),
-                        prevPoint,
-                        ...rest,
-                      ],
-                    )
-                  | turn => (turnFacing(facing, turn), [prevPoint, ...rest])
+                ((currFacing, acc), move) =>
+                  switch (acc) {
+                  | [prevPoint, ...rest] =>
+                    switch (move) {
+                    | Forward => (
+                        facing,
+                        [
+                          Point.Int.add(facingToDelta(currFacing), prevPoint),
+                          prevPoint,
+                          ...rest,
+                        ],
+                      )
+                    | turn => (
+                        turnFacing(facing, turn),
+                        [prevPoint, ...rest],
+                      )
+                    }
+                  | _ => assert(false)
                   },
                 (facing, [Point.(create(x, y))]),
                 moves,
@@ -481,6 +493,111 @@ let drawMap = (map, spriteData, env) => {
   drawLines(map, topleft, env);
 };
 
+let findInMap = (level, withId) => {
+  let cur = ref(None);
+  List.iteri(
+    (y, row) => {
+      List.iteri(
+        (x, tile) => {
+          switch (tile) {
+          | Floor(_, Boulder(id, _))
+          | Floor(_, Player(id, _, _)) when id === withId =>
+            cur := Some(Point.create(x, y))
+          | _ => ()
+          }
+        },
+        row,
+      )
+    },
+    level,
+  );
+  cur^;
+};
+
+let easeInOutQuad = t =>
+  t < 0.5 ? 2. *. t *. t : (-1.) +. (4. -. 2. *. t) *. t;
+
+let easeInOutCubic = t =>
+  t < 0.5
+    ? 4. *. t *. t *. t : (t -. 1.) *. (2. *. t -. 2.) *. (2. *. t -. 2.) +. 1.;
+
+let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
+  let topleft = getMapTopLeft(level, env);
+  let drawHelper = (x, y, obj) => {
+    let p = Point.Int.create(x, y);
+    let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
+    drawObj(~obj, ~pos, ~spriteData, env);
+  };
+  switch (previousLevel) {
+  | None =>
+    List.iteri(
+      (y, row) => {
+        List.iteri(
+          (x, tile) => {
+            switch (tile) {
+            | Floor(_, Boulder(id, _) as obj)
+            | Floor(_, Player(id, _, _) as obj) => drawHelper(x, y, obj)
+            | _ => ()
+            }
+          },
+          row,
+        )
+      },
+      level,
+    )
+  | Some({map: previousLevel}) =>
+    List.iteri(
+      (y, row) => {
+        List.iteri(
+          (x, tile) => {
+            switch (tile) {
+            | Floor(_, Boulder(id, _) as obj)
+            | Floor(_, Player(id, _, _) as obj) =>
+              switch (findInMap(previousLevel, id)) {
+              | None => drawHelper(x, y, obj)
+              | Some(prevP) =>
+                let p = Point.Int.create(x, y);
+                let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
+                let prevPos =
+                  Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
+                let time = easeInOutQuad(time /. tickTimeMS);
+                let animatingPosX =
+                  Utils.remapf(
+                    ~value=time,
+                    ~low1=0.,
+                    ~high1=1.0,
+                    ~low2=prevPos.x,
+                    ~high2=pos.x,
+                  );
+                let animatingPosY =
+                  Utils.remapf(
+                    ~value=time,
+                    ~low1=0.,
+                    ~high1=1.0,
+                    ~low2=prevPos.y,
+                    ~high2=pos.y,
+                  );
+
+                drawObj(
+                  ~obj,
+                  ~pos=Point.create(animatingPosX, animatingPosY),
+                  ~spriteData,
+                  env,
+                );
+                ();
+              }
+
+            | _ => ()
+            }
+          },
+          row,
+        )
+      },
+      level,
+    )
+  };
+};
+
 let draw = (state, env) => {
   Hooks.initialize(state.hooks);
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
@@ -492,8 +609,8 @@ let draw = (state, env) => {
   };
 
   if (Env.keyPressed(E, env)) {
-    editor := !editor^
-  }
+    editor := ! editor^;
+  };
 
   Draw.background(Utils.color(~r=13, ~g=43, ~b=69, ~a=255), env);
 
@@ -531,7 +648,10 @@ let draw = (state, env) => {
         {
           ...levelCurrentState,
           items:
-            List.filteri((i, _) => (editor^ || i != draggedI), levelCurrentState.items),
+            List.filteri(
+              (i, _) => editor^ || i != draggedI,
+              levelCurrentState.items,
+            ),
           map:
             setMapTile(
               levelCurrentState.map,
@@ -553,7 +673,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-
+    drawObjects(levelCurrentState.map, state.spriteData, env);
     drawToolbar(levelCurrentState.items, state.spriteData, dragging^, env);
     Option.iter(
       i =>
@@ -566,51 +686,74 @@ let draw = (state, env) => {
         ),
       dragging^,
     );
-
+  | ([levelInitialState, ...restOfLevels], RunningLevel([])) =>
+    failwith("This should not happen, RunningLevel got an empty list.")
   | (
       [levelInitialState, ...restOfLevels],
-      RunningLevel([levelCurrentState, ...pastLevelStates] as allLevelStates),
+      RunningLevel(
+        [levelCurrentState, ...pastLevelStates] as allLevelStates,
+      ),
     ) =>
-    let (lastTickTime, setLastTickTime) = Hooks.useState(__LOC__, 0.0);
+    let (lastTickTime, setLastTickTime) =
+      Hooks.useState(__LOC__, tickTimeMS);
+
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
-      setLastTickTime(0.0);
+      setLastTickTime(tickTimeMS);
     };
-    if (lastTickTime^ > tickTimeMS) {
-      switch (tick(levelCurrentState.map)) {
-      | Move(level) =>
-        setLastTickTime(0.0);
-        setGameState(
-          RunningLevel([
-            {...levelCurrentState, map: level},
-            levelCurrentState,
-            ...pastLevelStates,
-          ]),
-        );
-      | Win =>
-        if (editor^) {
-          setGameState(PreparingLevel(List.nth(allLevelStates, List.length(allLevelStates) - 1),));
-        } else {
-          setLevels(restOfLevels);
-          setGameState(WinLevel(levelCurrentState));
-        }
-        setLastTickTime(0.0);
-      | Lose =>
-        setGameState(
-          LoseLevel(
-            List.nth(allLevelStates, List.length(allLevelStates) - 1),
-          ),
-        );
-        setLastTickTime(0.0);
+
+    let pastLevelStates =
+      if (lastTickTime^ > tickTimeMS) {
+        switch (tick(levelCurrentState.map)) {
+        | Move(level) =>
+          setLastTickTime(0.0);
+          setGameState(
+            RunningLevel([
+              {...levelCurrentState, map: level},
+              levelCurrentState,
+              ...pastLevelStates,
+            ]),
+          );
+          [levelCurrentState, ...pastLevelStates];
+        | Win =>
+          if (editor^) {
+            setGameState(
+              PreparingLevel(
+                List.nth(allLevelStates, List.length(allLevelStates) - 1),
+              ),
+            );
+          } else {
+            setLevels(restOfLevels);
+            setGameState(WinLevel(levelCurrentState));
+          };
+          setLastTickTime(tickTimeMS);
+          pastLevelStates;
+        | Lose =>
+          setGameState(
+            LoseLevel(
+              List.nth(pastLevelStates, List.length(pastLevelStates) - 1),
+            ),
+          );
+          setLastTickTime(tickTimeMS);
+          pastLevelStates;
+        };
+      } else {
+        setLastTickTime(lastTickTime^ +. deltaTime);
+        pastLevelStates;
       };
-    } else {
-      setLastTickTime(lastTickTime^ +. deltaTime);
-    };
     drawMap(levelCurrentState.map, state.spriteData, env);
+    drawObjects(
+      ~previousLevel=?List.nth_opt(pastLevelStates, 0),
+      ~time=lastTickTime^,
+      levelCurrentState.map,
+      state.spriteData,
+      env,
+    );
     drawToolbar([], state.spriteData, None, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
+    drawObjects(level.map, state.spriteData, env);
     drawToolbar([], state.spriteData, None, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
@@ -629,6 +772,7 @@ let draw = (state, env) => {
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, state.spriteData, env);
+    drawObjects(prepLevelState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, None, env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;

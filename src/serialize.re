@@ -71,16 +71,19 @@ let map = m => {
 };
 
 let emptyMap = (width, height) => {
-  List.init(height)((y) => {
-    List.init(width)((x) => {
-      let tuple = (x, y);
-      switch (tuple) {
-      | (0, _)
-      | (_, 0) => Wall
-      | (w, _) when w == width - 1 => Wall
-      | (_, h) when h == height - 1 => Wall
-      | _ => Floor(Regular, Empty)
-      }
-    });
+  List.init(height, y => {
+    List.init(
+      width,
+      x => {
+        let tuple = (x, y);
+        switch (tuple) {
+        | (0, _)
+        | (_, 0) => Wall
+        | (w, _) when w == width - 1 => Wall
+        | (_, h) when h == height - 1 => Wall
+        | _ => Floor(Regular, Empty)
+        };
+      },
+    )
   });
-}
+};
