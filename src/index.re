@@ -40,7 +40,7 @@ let drawTile =
       switch (kind) {
       | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
       // TODO: Differentiate the filled pit vs floor.
-      | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env)
+      | FilledPit(_) => Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
       };
     };
     switch (obj) {
