@@ -49,10 +49,13 @@ let drawTile =
     };
     switch (obj) {
     | Player(_, facing, _) =>
-      // TODO: rotate player
-      // switch (facing) {
-      // };
-      Assets.drawSprite(spriteData, "guy_right", ~pos, env)
+      let assetName = switch (facing) {
+        | Up => "guy_up"
+        | Down => "guy_down"
+        | Right => "guy_right"
+        | Left => "guy_left"
+      };
+      Assets.drawSprite(spriteData, assetName, ~pos, env)
     | Boulder(_, health) =>
       switch (health) {
       | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
