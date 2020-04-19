@@ -104,3 +104,12 @@ let drawSprite = (t, name, ~pos, ~width=?, ~height=?, env) => {
     )
   };
 };
+
+let drawSpriteWithCenterRotation =
+    (t, name, ~pos as {x, y}: Point.Float.t, ~width, ~height, ~rot, env) => {
+  Draw.pushMatrix(env);
+  Draw.translate(~x, ~y, env);
+  Draw.rotate(rot, env);
+  drawSprite(t, name, ~pos=Point.Float.zero, ~width, ~height, env);
+  Draw.popMatrix(env);
+};

@@ -16,6 +16,8 @@ let editorItemList = [
   Floor(FilledPit(id()), Empty), // We don't need filled pit
   Wall,
   Pit,
+  Floor(Spinner(CW), Empty),
+  Floor(Spinner(CCW), Empty),
 ];
 
 let emptyLevel = {

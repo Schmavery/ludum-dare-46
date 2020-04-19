@@ -1,11 +1,16 @@
 open Common;
 
-// Do this to get the map Serialize.map(level);
+let spinnerDirection = d =>
+  switch (d) {
+  | CW => "CW"
+  | CCW => "CCW"
+  };
 
 let floorKind = fKind => {
   switch (fKind) {
   | Regular => "Regular"
   | FilledPit(_) => "FilledPit(id())"
+  | Spinner(dir) => "Spinner(" ++ spinnerDirection(dir) ++ ")"
   };
 };
 

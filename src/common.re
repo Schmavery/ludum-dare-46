@@ -58,9 +58,13 @@ type obj =
   | Player(id, facing, list(move))
   | Boulder(id, boulderHealth)
   | Empty;
+type spinnerDirection =
+  | CW
+  | CCW;
 type floorKind =
   | Regular
-  | FilledPit(id);
+  | FilledPit(id)
+  | Spinner(spinnerDirection);
 type tile =
   | Wall
   | Floor(floorKind, obj)

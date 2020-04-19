@@ -23,7 +23,15 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, ~height=tileSizef, ~width=tileSizef, env) => {
+let drawObj =
+    (
+      ~obj,
+      ~pos as {Point.x, y},
+      ~spriteData,
+      ~height=tileSizef,
+      ~width=tileSizef,
+      env,
+    ) => {
   let halfTileSize = tileSizef /. 2.;
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (obj) {
@@ -35,14 +43,7 @@ let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, ~height=tileSizef, ~widt
       | Right => "guy_right"
       | Left => "guy_left"
       };
-    Assets.drawSprite(
-      spriteData,
-      assetName,
-      ~pos,
-      ~width=width,
-      ~height=height,
-      env,
-    );
+    Assets.drawSprite(spriteData, assetName, ~pos, ~width, ~height, env);
   | Boulder(_, health) =>
     switch (health) {
     | Hard =>
@@ -72,6 +73,7 @@ let drawTile =
     (
       kind,
       {x, y}: Point.Float.t,
+      ~time,
       ~noBackground=false,
       ~withObj=false,
       spriteData: Sprite.t,
@@ -81,9 +83,10 @@ let drawTile =
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (kind) {
   | Floor(kind, obj) =>
-    if (!noBackground || editor^) {
-      switch (kind) {
-      | Regular =>
+    let background = !noBackground || editor^;
+    switch (kind) {
+    | Regular =>
+      if (background) {
         Assets.drawSprite(
           spriteData,
           "floor",
@@ -91,9 +94,10 @@ let drawTile =
           ~width=tileSizef,
           ~height=tileSizef,
           env,
-        )
-      // TODO: Differentiate the filled pit vs floor.
-      | FilledPit(_) =>
+        );
+      }
+    | FilledPit(_) =>
+      if (background) {
         Assets.drawSprite(
           spriteData,
           "pit_with_boulder",
@@ -101,8 +105,28 @@ let drawTile =
           ~width=tileSizef,
           ~height=tileSizef,
           env,
-        )
+        );
+      }
+    | Spinner(dir) =>
+      if (background) {
+        Assets.drawSprite(
+          spriteData,
+          "floor",
+          ~pos,
+          ~width=tileSizef,
+          ~height=tileSizef,
+          env,
+        );
       };
+      Assets.drawSpriteWithCenterRotation(
+        spriteData,
+        "wall",
+        ~pos,
+        ~width=tileSizef,
+        ~height=tileSizef,
+        ~rot=time,
+        env,
+      );
     };
     if (withObj) {
       drawObj(~obj, ~pos={x, y}, ~spriteData, env);
@@ -204,7 +228,7 @@ let getHoveredMapSquare = (map, env) => {
   };
 };
 
-let getHoveredInventoryIndex = env => {
+let getHoveredInventoryIndex = (items, env) => {
   let mousePt = Point.Float.ofIntPt(Point.fromPair(Env.mouse(env)));
   let inventoryTopLeft = getInventoryTopLeft(env);
 
@@ -224,13 +248,18 @@ let getHoveredInventoryIndex = env => {
       Point.map(~f=v => mod_float(v, tileAndMargin), relativePos);
     let {x, y}: Point.Int.t =
       Point.Int.ofFloatPt(Point.Float.(relativePos /@ tileAndMargin));
-    Some((x + y * toolbarItemRowLen, hoverOffset));
+    let index = x + y * toolbarItemRowLen;
+    if (index < List.length(items)) {
+      Some((index, hoverOffset));
+    } else {
+      None;
+    };
   } else {
     None;
   };
 };
 
-let drawInventory = (inventory, spriteData, hovered, env) => {
+let drawInventory = (inventory, spriteData, hovered, ~time, env) => {
   let topleft = getInventoryTopLeft(env);
   List.iteri(
     (i, item) => {
@@ -245,6 +274,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
         item,
         ~noBackground=true,
         ~withObj=true,
+        ~time,
         Point.Float.add(topleft, relativePos),
         spriteData,
         env,
@@ -296,7 +326,8 @@ let getPlayRect = env => {
   );
 };
 
-let drawToolbar = (inventory, ~accelerateTime=false, spriteData, hovered, env) => {
+let drawToolbar =
+    (inventory, ~accelerateTime=false, spriteData, hovered, ~time, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
@@ -336,7 +367,7 @@ let drawToolbar = (inventory, ~accelerateTime=false, spriteData, hovered, env) =
     env,
   );
 
-  drawInventory(inventory, spriteData, hovered, env);
+  drawInventory(inventory, spriteData, hovered, ~time, env);
 };
 
 let facingToDelta = facing =>
@@ -386,6 +417,17 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
     replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
   | (Floor(k1, Boulder(id, health)), Pit) =>
     replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
+  | (Floor(k, Player(id, facing, moves)), Floor(Spinner(dir), Empty)) =>
+    let move =
+      switch (dir) {
+      | CW => TurnRight
+      | CCW => TurnLeft
+      };
+    replaceWith(
+      level,
+      Floor(k, Empty),
+      Floor(Spinner(dir), Player(id, facing, [move, ...moves])),
+    );
   | (Floor(k1, Player(_) as p), Floor(k2, Empty)) =>
     replaceWith(level, Floor(k1, Empty), Floor(k2, p))
   | (Floor(_, Player(_)), Wall)
@@ -558,7 +600,7 @@ let drawLines = (map, mapTopLeft, env) => {
   );
 };
 
-let drawMap = (map, spriteData, env) => {
+let drawMap = (map, spriteData, ~time, env) => {
   let topleft = getMapTopLeft(map, env);
   List.iteri(
     (y, row) => {
@@ -567,6 +609,7 @@ let drawMap = (map, spriteData, env) => {
           let p = Point.Int.create(x, y);
           drawTile(
             tile,
+            ~time,
             Point.Float.(topleft + ofIntPt(p) *@ tileSizef),
             spriteData,
             env,
@@ -633,15 +676,16 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
       );
 
     // If we're moving in the x position, we need to calculate gravity from a Y perspective
-    let bounceY = if (prevPos.x != pos.x) { 
-        sin(bounce) *. 6. 
-      } else if (prevPos.y != pos.y) { 
-        sin(bounce) *. 6.
+    let bounceY =
+      if (prevPos.x != pos.x) {
+        sin(bounce) *. 6.;
+      } else if (prevPos.y != pos.y) {
+        sin(bounce) *. 6.;
       } else {
-        0.
+        0.;
       };
 
-    abs_float(bounceY) *. -1.0;
+    abs_float(bounceY) *. (-1.0);
   };
   switch (previousLevel) {
   | None =>
@@ -711,12 +755,14 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
 
                 let squishY =
                   switch (tile) {
-                  | Floor(_, Player(_, _, _)) => tileSizef -. (bounceY *. -0.75)
+                  | Floor(_, Player(_, _, _)) =>
+                    tileSizef -. bounceY *. (-0.75)
                   | _ => tileSizef
                   };
                 let squishX =
                   switch (tile) {
-                  | Floor(_, Player(_, _, _)) => tileSizef +. (bounceY *. -0.75)
+                  | Floor(_, Player(_, _, _)) =>
+                    tileSizef +. bounceY *. (-0.75)
                   | _ => tileSizef
                   };
 
@@ -765,6 +811,9 @@ let draw = (state, env) => {
   let accelerateTime = false;
   let restarted = Env.keyPressed(R, env);
 
+  let (totalTime, setTotalTime) = Hooks.useState(__LOC__, 0.);
+  setTotalTime(mod_float(totalTime^ +. Env.deltaTime(env), 10000000.));
+
   if (Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
@@ -794,7 +843,7 @@ let draw = (state, env) => {
     ) =>
     let (dragging, setDragging) = Hooks.useState(__LOC__, None);
 
-    let hoveredItem = getHoveredInventoryIndex(env);
+    let hoveredItem = getHoveredInventoryIndex(levelCurrentState.items, env);
     let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
 
     if (editor^ && Env.keyPressed(P, env)) {
@@ -906,13 +955,14 @@ let draw = (state, env) => {
     if (Env.keyPressed(Space, env)) {
       setGameState(RunningLevel([levelCurrentState]));
     };
-    drawMap(levelCurrentState.map, state.spriteData, env);
+    drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
     drawObjects(levelCurrentState.map, state.spriteData, env);
     drawToolbar(
       levelCurrentState.items,
       ~accelerateTime,
       state.spriteData,
       Option.map(fst, dragging^),
+      ~time=totalTime^,
       env,
     );
     Option.iter(
@@ -922,6 +972,7 @@ let draw = (state, env) => {
           Point.Float.(
             ofIntPt(Point.fromPair(Env.mouse(env))) - dragOffset
           ),
+          ~time=totalTime^,
           ~noBackground=true,
           ~withObj=true,
           state.spriteData,
@@ -985,7 +1036,7 @@ let draw = (state, env) => {
         "There was only one level in the stack of levels, should not happen",
       ) // WEIRD
     | Some(pastLevel) =>
-      drawMap(pastLevel.map, state.spriteData, env);
+      drawMap(pastLevel.map, state.spriteData, ~time=totalTime^, env);
       drawObjects(
         ~previousLevel=pastLevel,
         ~time=lastTickTime^,
@@ -994,15 +1045,15 @@ let draw = (state, env) => {
         env,
       );
     };
-    drawToolbar([], state.spriteData, None, env); // TODO: Any items?
+    drawToolbar([], state.spriteData, None, ~time=totalTime^, env); // TODO: Any items?
     if (restarted) {
       setGameState(PreparingLevel(levelInitialState));
       setLastTickTime(tickTimeMS +. 1.);
     };
   | ([nextLevel, ..._], WinLevel(level)) =>
-    drawMap(level.map, state.spriteData, env);
+    drawMap(level.map, state.spriteData, ~time=totalTime^, env);
     drawObjects(level.map, state.spriteData, env);
-    drawToolbar([], state.spriteData, None, env);
+    drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
@@ -1019,9 +1070,9 @@ let draw = (state, env) => {
       env,
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
-    drawMap(prepLevelState.map, state.spriteData, env);
+    drawMap(prepLevelState.map, state.spriteData, ~time=totalTime^, env);
     drawObjects(prepLevelState.map, state.spriteData, env);
-    drawToolbar([], state.spriteData, None, env);
+    drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (loseTimer^ < 0.0 || Env.keyPressed(Space, env)) {
