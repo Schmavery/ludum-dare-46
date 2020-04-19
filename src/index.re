@@ -305,6 +305,8 @@ let tick = level => {
 
 let drawMessage = (message, env) => {
   let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
+  let textWidth = Draw.textWidth(~body=message, env);
+  let x = (Env.width(env) - textWidth) / 2;
   Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
   Draw.rectf(
     ~pos=(0.0, 0.0),
@@ -314,7 +316,7 @@ let drawMessage = (message, env) => {
   );
   Draw.text(
     ~body=message,
-    ~pos=(20, y),
+    ~pos=(x, y),
     env,
   );
 }
@@ -348,9 +350,9 @@ let draw = (state, env) => {
 
   switch (levels^, gameState^) {
   | ([], _) =>
-    Draw.text(~body="You WON the whole game", ~pos=(100, 100), env)
+    drawMessage("You WON the whole game", env);
   | ([first, ...rest], Intro) =>
-    Draw.text(~body="Welcome", ~pos=(100, 100), env);
+    drawMessage("Welcome", env);
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(first));
     };
@@ -408,8 +410,8 @@ let draw = (state, env) => {
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));
     };
-    drawMap(level.map, state.spriteData, env);
-    Draw.text(~body="You WIN", ~pos=(100, 100), env);
+    drawMap(level.map, spriteData, env);
+    drawMessage("He's safe and sound.", env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
