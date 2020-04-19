@@ -70,11 +70,20 @@ let placeholder = (name, ~pos, ~width, ~height, env) => {
   );
 };
 
-let drawSprite = (t, name, ~pos, ~scale=0.4166, env) => {
+let drawSprite = (t, name, ~pos, ~width=?, ~height=?, env) => {
   switch (StringMap.find(name, t.Sprite.map)) {
   | {x, y, w, h} =>
-    let width = float_of_int(w) *. scale;
-    let height = float_of_int(h) *. scale;
+    let width =
+      switch (width) {
+      | None => float_of_int(w)
+      | Some(w) => w
+      };
+    let height =
+      switch (height) {
+      | None => float_of_int(h)
+      | Some(h) => h
+      };
+
     Draw.subImagef(
       t.sheet,
       ~pos=Point.Float.(toPair(pos - create(width /. 2., height /. 2.))),
