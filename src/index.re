@@ -1,15 +1,9 @@
 open Common;
 open Reprocessing;
 
-<<<<<<< HEAD
 let setup = (spriteData, env): Common.state => {
-  let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
-  let spritesheetLocation = "assets/sprites/spritesheet.png";
-
-=======
-let setup = (env): state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
->>>>>>> 56ff067eaeaa6dfea5de313318575f0e7ef0bffb
+  let spritesheetLocation = "assets/sprites/spritesheet.png";
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -19,13 +13,11 @@ let setup = (env): state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
-<<<<<<< HEAD
-    spriteData: Sprite.create(
+    spriteData:
+      Sprite.create(
         Draw.loadImage(~filename=spritesheetLocation, env),
         spriteData,
       ),
-=======
->>>>>>> 56ff067eaeaa6dfea5de313318575f0e7ef0bffb
     font: Draw.loadFont(~filename=fontPath, env),
   };
 };
@@ -38,12 +30,7 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData, env) => {
     | FilledPit(_) =>
       Draw.fill(Utils.color(~r=35, ~g=112, ~b=166, ~a=255), env)
     };
-    Draw.rectf(
-      ~pos=(x, y),
-      ~width=tileSizef,
-      ~height=tileSizef,
-      env,
-    );
+    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
     switch (obj) {
     | Player(_, _, _) =>
       Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=255), env);
@@ -70,20 +57,10 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData, env) => {
     };
   | Pit =>
     Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=255), env);
-    Draw.rectf(
-      ~pos=(x, y),
-      ~width=tileSizef,
-      ~height=tileSizef,
-      env,
-    );
+    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
   | Wall =>
     Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
-    Draw.rectf(
-      ~pos=(x, y),
-      ~width=tileSizef,
-      ~height=tileSizef,
-      env,
-    );
+    Draw.rectf(~pos=(x, y), ~width=tileSizef, ~height=tileSizef, env);
   };
 };
 
@@ -111,16 +88,23 @@ let drawInventory = (inventory, spriteData, env) => {
   List.iteri(
     (i, item) => {
       let x =
-        float_of_int(i mod toolbarItemRowLen)
-        *. (tileSizef +. btnMargin);
-      let y =
-        (tileSizef +. btnMargin)
-        *. float_of_int(i / toolbarItemRowLen);
+        float_of_int(i mod toolbarItemRowLen) *. (tileSizef +. btnMargin);
+      let y = (tileSizef +. btnMargin) *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
       if (i == getHoveredInventoryIndex(Point.fromPair(Env.mouse(env)), env)) {
-        drawTile(Pit, Point.Float.add(topleft, relativePos), spriteData, env);
+        drawTile(
+          Pit,
+          Point.Float.add(topleft, relativePos),
+          spriteData,
+          env,
+        );
       } else {
-        drawTile(item, Point.Float.add(topleft, relativePos), spriteData, env);
+        drawTile(
+          item,
+          Point.Float.add(topleft, relativePos),
+          spriteData,
+          env,
+        );
       };
     },
     inventory,
@@ -324,13 +308,8 @@ let drawMessage = (message, offset, font, env) => {
     ~height=float_of_int(Env.height(env)),
     env,
   );
-  Draw.text(
-    ~font,
-    ~body=message,
-    ~pos=(x, y),
-    env,
-  );
-}
+  Draw.text(~font, ~body=message, ~pos=(x, y), env);
+};
 
 let drawMap = (map, spriteData, env) => {
   List.iteri(
@@ -338,7 +317,12 @@ let drawMap = (map, spriteData, env) => {
       List.iteri(
         (x, tile) => {
           let p = Point.Int.create(x, y);
-          drawTile(tile, Point.Float.(ofIntPt(p) *@ tileSizef), spriteData, env);
+          drawTile(
+            tile,
+            Point.Float.(ofIntPt(p) *@ tileSizef),
+            spriteData,
+            env,
+          );
         },
         row,
       )
@@ -360,8 +344,7 @@ let draw = (state, env) => {
   Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
 
   switch (levels^, gameState^) {
-  | ([], _) =>
-    drawMessage("You WON the whole game", 0.0, state.font, env);
+  | ([], _) => drawMessage("You WON the whole game", 0.0, state.font, env)
   | ([first, ...rest], Intro) =>
     drawMessage("Welcome", 0.0, state.font, env);
     if (Env.keyPressed(Space, env)) {
@@ -425,10 +408,15 @@ let draw = (state, env) => {
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
       setWinMsgTimer(loseMsgTimeMS);
       setGameState(PreparingLevel(nextLevel));
-    }
+    };
     setWinMsgTimer(winTimer^ -. deltaTime);
-    drawMessage("You did it!", toolbarHeight, state.font, env)
-    drawMessage("He's safe and sound.", toolbarHeight -. 90., state.font, env)
+    drawMessage("You did it!", toolbarHeight, state.font, env);
+    drawMessage(
+      "He's safe and sound.",
+      toolbarHeight -. 90.,
+      state.font,
+      env,
+    );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
@@ -439,7 +427,12 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(prepLevelState));
     };
     setLoseTimer(loseTimer^ -. deltaTime);
-    drawMessage("Gosh, keep him ALIVE this time will ya?", toolbarHeight, state.font, env)
+    drawMessage(
+      "Gosh, keep him ALIVE this time will ya?",
+      toolbarHeight,
+      state.font,
+      env,
+    );
   };
 
   {
@@ -472,7 +465,6 @@ let mouseUp = (state, _) => {
   },
 };
 
-Assets.loadSpriteSheet("assets/sprites/spritesheet.json", (assets) => 
+Assets.loadSpriteSheet("assets/sprites/spritesheet.json", assets =>
   run(~setup=setup(assets), ~draw, ~mouseDown, ~mouseUp, ())
 );
-

@@ -1,4 +1,4 @@
-open Reprocessing
+open Reprocessing;
 
 let tileSizef = 50.;
 let toolbarHeight = 180.0;
@@ -25,7 +25,7 @@ module Sprite = {
     map: StringMap.t(spriteEntry),
   };
 
-  let create = (sheet, map) => { sheet, map };
+  let create = (sheet, map) => {sheet, map};
 };
 
 type mouse = {
