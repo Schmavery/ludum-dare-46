@@ -317,6 +317,7 @@ let drawMessage = (message, offset, font, env) => {
   let textWidth = Draw.textWidth(~font, ~body=message, env);
   let x = (Env.width(env) - textWidth) / 2;
   Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+  Draw.tint(Utils.color(~r=0, ~g=0, ~b=0, ~a=190), env);
   Draw.rectf(
     ~pos=(0.0, 0.0),
     ~width=float_of_int(Env.width(env)),
