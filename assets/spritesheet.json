@@ -1,0 +1,60 @@
+{"frames": [
+
+{
+	"filename": "cracked_boulder.png",
+	"frame": {"x":4,"y":132,"w":124,"h":125},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":124,"h":125},
+	"sourceSize": {"w":124,"h":125}
+},
+{
+	"filename": "floor.png",
+	"frame": {"x":4,"y":4,"w":120,"h":120},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
+	"sourceSize": {"w":120,"h":120}
+},
+{
+	"filename": "main_character.png",
+	"frame": {"x":269,"y":132,"w":130,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":129},
+	"sourceSize": {"w":130,"h":129}
+},
+{
+	"filename": "normal_boulder.png",
+	"frame": {"x":136,"y":132,"w":125,"h":125},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":125,"h":125},
+	"sourceSize": {"w":125,"h":125}
+},
+{
+	"filename": "pit.png",
+	"frame": {"x":132,"y":4,"w":120,"h":120},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
+	"sourceSize": {"w":120,"h":120}
+},
+{
+	"filename": "wall.png",
+	"frame": {"x":260,"y":4,"w":120,"h":120},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
+	"sourceSize": {"w":120,"h":120}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "spritesheet.png",
+	"format": "RGBA8888",
+	"size": {"w":403,"h":265},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:ea35057338da79912ed40f0b5ca1310f:f4dba80cfeae2307ec61c7e96124cba1:729adc6043343cfda41c447ce8f464d6$"
+}
+}
