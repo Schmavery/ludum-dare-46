@@ -1,8 +1,24 @@
 {"frames": [
 
 {
+	"filename": "accelerate.png",
+	"frame": {"x":4,"y":391,"w":240,"h":240},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
+	"sourceSize": {"w":240,"h":240}
+},
+{
+	"filename": "back.png",
+	"frame": {"x":252,"y":391,"w":240,"h":240},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
+	"sourceSize": {"w":240,"h":240}
+},
+{
 	"filename": "cracked_boulder.png",
-	"frame": {"x":4,"y":644,"w":121,"h":121},
+	"frame": {"x":132,"y":260,"w":121,"h":121},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":121,"h":121},
@@ -26,7 +42,7 @@
 },
 {
 	"filename": "guy_left.png",
-	"frame": {"x":4,"y":132,"w":120,"h":120},
+	"frame": {"x":260,"y":4,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -34,7 +50,7 @@
 },
 {
 	"filename": "guy_right.png",
-	"frame": {"x":132,"y":132,"w":120,"h":120},
+	"frame": {"x":388,"y":4,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -42,7 +58,7 @@
 },
 {
 	"filename": "guy_up.png",
-	"frame": {"x":4,"y":260,"w":120,"h":120},
+	"frame": {"x":4,"y":132,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -50,7 +66,7 @@
 },
 {
 	"filename": "normal_boulder.png",
-	"frame": {"x":4,"y":773,"w":121,"h":123},
+	"frame": {"x":261,"y":260,"w":121,"h":123},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":121,"h":123},
@@ -58,7 +74,7 @@
 },
 {
 	"filename": "pit.png",
-	"frame": {"x":132,"y":260,"w":120,"h":120},
+	"frame": {"x":132,"y":132,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -66,7 +82,7 @@
 },
 {
 	"filename": "pit_with_boulder.png",
-	"frame": {"x":4,"y":388,"w":120,"h":120},
+	"frame": {"x":260,"y":132,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -74,15 +90,23 @@
 },
 {
 	"filename": "pit_with_cracked_boulder.png",
-	"frame": {"x":132,"y":388,"w":120,"h":120},
+	"frame": {"x":388,"y":132,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
 	"sourceSize": {"w":120,"h":120}
 },
 {
+	"filename": "play.png",
+	"frame": {"x":4,"y":639,"w":240,"h":240},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
+	"sourceSize": {"w":240,"h":240}
+},
+{
 	"filename": "undo.png",
-	"frame": {"x":4,"y":904,"w":240,"h":240},
+	"frame": {"x":252,"y":639,"w":240,"h":240},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
@@ -90,7 +114,7 @@
 },
 {
 	"filename": "wall.png",
-	"frame": {"x":4,"y":516,"w":120,"h":120},
+	"frame": {"x":4,"y":260,"w":120,"h":120},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":120,"h":120},
@@ -101,8 +125,8 @@
 	"version": "1.0",
 	"image": "spritesheet.png",
 	"format": "RGBA8888",
-	"size": {"w":256,"h":1148},
+	"size": {"w":512,"h":883},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:f196317adefd28921f07a80e22bc4f1e:4ceb7781d94c40cd7c34b0802d313f01:729adc6043343cfda41c447ce8f464d6$"
+	"smartupdate": "$TexturePacker:SmartUpdate:52feb402c477a37ee9e723a536731385:a346fc763f73d9611a257bdad083260e:729adc6043343cfda41c447ce8f464d6$"
 }
 }

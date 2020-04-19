@@ -260,7 +260,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
 let getUndoRect = env => {
   let height = float_of_int(Env.height(env));
   let backgroundY = height -. toolbarHeight;
-  let size = tileSizef *. 1.5;
+  let size = tileSizef *. 1.4;
   Rect.fromPoints(
     Point.create(
       btnMargin +. size /. 2.,
@@ -270,7 +270,33 @@ let getUndoRect = env => {
   );
 };
 
-let drawToolbar = (inventory, spriteData, hovered, env) => {
+let getBackRect = env => {
+  let height = float_of_int(Env.height(env));
+  let backgroundY = height -. toolbarHeight;
+  let size = tileSizef *. 1.4;
+  Rect.fromPoints(
+    Point.create(
+      btnMargin +. size +. size /. 2. +. btnMargin,
+      btnMargin +. size /. 2. +. backgroundY,
+    ),
+    Point.create(size, size),
+  );
+};
+
+let getPlayRect = env => {
+  let height = float_of_int(Env.height(env));
+  let backgroundY = height -. toolbarHeight;
+  let size = tileSizef *. 1.4;
+  Rect.fromPoints(
+    Point.create(
+      btnMargin +. size +. btnMargin +. size +. size /. 2. +. btnMargin,
+      btnMargin +. size /. 2. +. backgroundY,
+    ),
+    Point.create(size, size),
+  );
+};
+
+let drawToolbar = (inventory, ~accelerateTime=false, spriteData, hovered, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
@@ -288,38 +314,25 @@ let drawToolbar = (inventory, spriteData, hovered, env) => {
     ~height=rect.height,
     env,
   );
-  // Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
-  // Draw.rectf(
-  //   ~pos=(btnMargin, btnMargin +. backgroundY),
-  //   ~width=btnSize,
-  //   ~height=btnSize,
-  //   env,
-  // );
 
-  // Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  // let x = btnMargin +. (btnMargin +. btnSize) *. 1.;
-  // Draw.rectf(
-  //   ~pos=(x, btnMargin +. backgroundY),
-  //   ~width=btnSize,
-  //   ~height=btnSize,
-  //   env,
-  // );
-
-  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  let x = btnMargin +. (btnMargin +. btnSize) *. 2.;
-  Draw.rectf(
-    ~pos=(x, btnMargin +. backgroundY),
-    ~width=btnSize,
-    ~height=btnSize,
+  let rect = getBackRect(env);
+  Assets.drawSprite(
+    spriteData,
+    "back",
+    ~pos=Point.create(rect.left, rect.top),
+    ~width=rect.width,
+    ~height=rect.height,
     env,
   );
 
-  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  let x = btnMargin +. (btnMargin +. btnSize) *. 3.;
-  Draw.rectf(
-    ~pos=(x, btnMargin +. backgroundY),
-    ~width=btnSize,
-    ~height=btnSize,
+  let rect = getPlayRect(env);
+  let playOrAcceleate = if (accelerateTime) {"accelerate"} else {"play"};
+  Assets.drawSprite(
+    spriteData,
+    playOrAcceleate,
+    ~pos=Point.create(rect.left, rect.top),
+    ~width=rect.width,
+    ~height=rect.height,
     env,
   );
 
@@ -749,6 +762,7 @@ let draw = (state, env) => {
     } else {
       false;
     };
+  let accelerateTime = false;
   let restarted = Env.keyPressed(R, env);
 
   if (Env.keyPressed(T, env)) {
@@ -896,6 +910,7 @@ let draw = (state, env) => {
     drawObjects(levelCurrentState.map, state.spriteData, env);
     drawToolbar(
       levelCurrentState.items,
+      ~accelerateTime,
       state.spriteData,
       Option.map(fst, dragging^),
       env,
