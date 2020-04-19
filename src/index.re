@@ -419,15 +419,23 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
   | (Floor(k1, Boulder(id, health)), Pit) =>
     replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
   | (Floor(k, Player(id, facing, moves)), Floor(Spinner(dir), Empty)) =>
-    let move =
-      switch (dir) {
-      | CW => TurnRight
-      | CCW => TurnLeft
-      };
+    let move = dir == CW ? TurnRight : TurnLeft;
     replaceWith(
       level,
       Floor(k, Empty),
       Floor(Spinner(dir), Player(id, facing, [move, ...moves])),
+    );
+  | (
+      Floor(Spinner(dir), Player(id, facing, moves)),
+      Floor(k, Boulder(id2, boulderState)),
+    )
+      when preResolved =>
+    let move = dir == CW ? TurnRight : TurnLeft;
+    let obj = boulderState == Hard ? Boulder(id2, Cracked) : Empty;
+    replaceWith(
+      level,
+      Floor(Spinner(dir), Player(id, facing, [move, ...moves])),
+      Floor(k, obj),
     );
   | (Floor(k1, Player(_) as p), Floor(k2, Empty)) =>
     replaceWith(level, Floor(k1, Empty), Floor(k2, p))
