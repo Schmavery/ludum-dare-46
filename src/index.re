@@ -74,7 +74,8 @@ let getInventoryTopLeft = env => {
 };
 
 let getMapTopLeft = (map, env) => {
-  Point.create(0., 0.);
+  Point.x: Env.width(env)->float_of_int /. 2. -. (List.length(List.hd(map))->float_of_int *. tileSizef) /. 2., 
+        y: Env.height(env)->float_of_int /. 2. -. (List.length(map)->float_of_int *. tileSizef /. 2.)
 };
 
 let getHoveredMapSquare = (map, env) => {
@@ -320,18 +321,20 @@ let tick = level => {
   );
 };
 
-let drawMessage = (message, offset, font, env) => {
+let drawMessage = (message, offset, font, ~withBackground=true, env) => {
   let y = (Env.height(env) - int_of_float(offset) - fontHeight) / 2;
   let textWidth = Draw.textWidth(~font, ~body=message, env);
   let x = (Env.width(env) - textWidth) / 2;
-  Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+  if (withBackground) {
+    Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+    Draw.rectf(
+      ~pos=(0.0, 0.0),
+      ~width=float_of_int(Env.width(env)),
+      ~height=float_of_int(Env.height(env)),
+      env,
+    );
+  };
   Draw.tint(Utils.color(~r=0, ~g=0, ~b=0, ~a=190), env);
-  Draw.rectf(
-    ~pos=(0.0, 0.0),
-    ~width=float_of_int(Env.width(env)),
-    ~height=float_of_int(Env.height(env)),
-    env,
-  );
   Draw.text(~font, ~body=message, ~pos=(x, y), env);
   Draw.noTint(env);
 };
@@ -465,6 +468,7 @@ let draw = (state, env) => {
       "He's safe and sound.",
       toolbarHeight -. 90.,
       state.font,
+      ~withBackground=false,
       env,
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
@@ -478,9 +482,16 @@ let draw = (state, env) => {
     };
     setLoseTimer(loseTimer^ -. deltaTime);
     drawMessage(
-      "Gosh, keep him ALIVE this time will ya?",
+      "Gosh, keep him ALIVE",
       toolbarHeight,
       state.font,
+      env,
+    );
+    drawMessage(
+      "next time, will ya?",
+      toolbarHeight -. 90.,
+      state.font,
+      ~withBackground=false,
       env,
     );
   };
