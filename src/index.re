@@ -506,6 +506,7 @@ let findInMap = (level, withId) => {
       List.iteri(
         (x, tile) => {
           switch (tile) {
+          | Floor(FilledPit(id), _)
           | Floor(_, Boulder(id, _))
           | Floor(_, Player(id, _, _)) when id === withId =>
             cur := Some(Point.create(x, y))
@@ -559,11 +560,11 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
             switch (tile) {
             | Floor(_, Boulder(id, _) as obj)
             | Floor(_, Player(id, _, _) as obj) =>
-              switch (findInMap(previousLevel, id)) {
+              switch (findInMap(level, id)) {
               | None => drawHelper(x, y, obj)
-              | Some(prevP) =>
-                let p = Point.Int.create(x, y);
+              | Some(p) =>
                 let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
+                let prevP = Point.Int.create(x, y);
                 let prevPos =
                   Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
                 let time = easeInOutQuad(time /. tickTimeMS);
@@ -609,9 +610,14 @@ let draw = (state, env) => {
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
   let (gameState, setGameState) = Hooks.useState(__LOC__, Intro);
 
+  // This value always starts at MAX so we tick once immediately
+  let (lastTickTime, setLastTickTime) =
+    Hooks.useState(__LOC__, tickTimeMS +. 1.);
+
   if (editor^ && Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
+    setLastTickTime(tickTimeMS +. 1.);
   };
 
   if (Env.keyPressed(E, env)) {
@@ -701,10 +707,6 @@ let draw = (state, env) => {
         [levelCurrentState, ...pastLevelStates] as allLevelStates,
       ),
     ) =>
-    // This value always starts at MAX so we tick once immediately
-    let (lastTickTime, setLastTickTime) =
-      Hooks.useState(__LOC__, tickTimeMS +. 1.);
-
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
