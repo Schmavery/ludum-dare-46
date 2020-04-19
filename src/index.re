@@ -73,17 +73,40 @@ let getInventoryTopLeft = env => {
   Point.create(xOffset, yOffset);
 };
 
-let getHoveredInventoryIndex = (mousePos, env) => {
-  let inventoryTopLeft = getInventoryTopLeft(env);
-  let relativePos = Point.Float.(ofIntPt(mousePos) - inventoryTopLeft);
-  let {x, y}: Point.Int.t =
-    Point.Int.ofFloatPt(
-      Point.Float.(relativePos /@ (tileSizef +. btnMargin)),
-    );
-  x + y * toolbarItemRowLen;
+let getMapTopLeft = (map, env) => {
+  Point.create(0., 0.);
 };
 
-let drawInventory = (inventory, spriteData, env) => {
+let getHoveredMapSquare = (map, env) => {
+  ();
+};
+
+let getHoveredInventoryIndex = env => {
+  let mousePt = Point.Float.ofIntPt(Point.fromPair(Env.mouse(env)));
+  let inventoryTopLeft = getInventoryTopLeft(env);
+
+  let inventoryWidth =
+    (btnMargin +. tileSizef) *. float_of_int(Common.toolbarItemRowLen);
+  let inventoryHeight = (btnMargin +. tileSizef) *. 2.;
+  let inventoryRect =
+    Rect.fromPoints(
+      inventoryTopLeft,
+      Point.create(inventoryWidth, inventoryHeight),
+    );
+
+  if (Rect.containsPtf(inventoryRect, mousePt)) {
+    let relativePos = Point.Float.(mousePt - inventoryTopLeft);
+    let {x, y}: Point.Int.t =
+      Point.Int.ofFloatPt(
+        Point.Float.(relativePos /@ (tileSizef +. btnMargin)),
+      );
+    Some(x + y * toolbarItemRowLen);
+  } else {
+    None;
+  };
+};
+
+let drawInventory = (inventory, spriteData, hovered, env) => {
   let topleft = getInventoryTopLeft(env);
   List.iteri(
     (i, item) => {
@@ -91,13 +114,14 @@ let drawInventory = (inventory, spriteData, env) => {
         float_of_int(i mod toolbarItemRowLen) *. (tileSizef +. btnMargin);
       let y = (tileSizef +. btnMargin) *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
-      if (i == getHoveredInventoryIndex(Point.fromPair(Env.mouse(env)), env)) {
+      if (Some(i) == hovered) {
         drawTile(
           Pit,
           Point.Float.add(topleft, relativePos),
           spriteData,
           env,
         );
+        drawTile(Pit, Point.Float.add(topleft, relativePos), spriteData, env);
       } else {
         drawTile(
           item,
@@ -111,7 +135,7 @@ let drawInventory = (inventory, spriteData, env) => {
   );
 };
 
-let drawToolbar = (inventory, spriteData, env) => {
+let drawToolbar = (inventory, spriteData, hovered, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
@@ -136,7 +160,7 @@ let drawToolbar = (inventory, spriteData, env) => {
     env,
   );
 
-  drawInventory(inventory, spriteData, env);
+  drawInventory(inventory, spriteData, hovered, env);
 };
 
 let getLevelTile = (level, {x, y}: Point.Int.t) => {
@@ -313,6 +337,7 @@ let drawMessage = (message, offset, font, env) => {
 };
 
 let drawMap = (map, spriteData, env) => {
+  let topleft = getMapTopLeft(map, env);
   List.iteri(
     (y, row) => {
       List.iteri(
@@ -320,7 +345,7 @@ let drawMap = (map, spriteData, env) => {
           let p = Point.Int.create(x, y);
           drawTile(
             tile,
-            Point.Float.(ofIntPt(p) *@ tileSizef),
+            Point.Float.(topleft + ofIntPt(p) *@ tileSizef),
             spriteData,
             env,
           );
@@ -355,6 +380,19 @@ let draw = (state, env) => {
       [levelInitialState, ...restOfLevels],
       PreparingLevel(levelCurrentState),
     ) =>
+    let (dragging, setDragging) = Hooks.useState(__LOC__, None);
+
+    let hoveredItem = getHoveredInventoryIndex(env);
+
+    // TODO: Figure out if you're over a valid map square when letting go and update the map
+    switch (hoveredItem, dragging^) {
+    | (None, None) => ()
+    | (Some(i), None) when state.mouse.down => setDragging(Some(i))
+    | (Some(i), None) => ()
+    | (_, Some(i)) when Env.mousePressed(env) => ()
+    | (_, Some(i)) => setDragging(None)
+    };
+
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
     };
@@ -362,7 +400,18 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-    drawToolbar(levelCurrentState.items, state.spriteData, env);
+    drawToolbar(levelCurrentState.items, state.spriteData, hoveredItem, env);
+    Option.iter(
+      i =>
+        drawTile(
+          List.nth(levelCurrentState.items, i),
+          Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
+          state.spriteData,
+          env,
+        ),
+      dragging^,
+    );
+
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -400,10 +449,10 @@ let draw = (state, env) => {
       setLastTickTime(lastTickTime^ +. deltaTime);
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-    drawToolbar([], state.spriteData, env); // TODO: Any items?
+    drawToolbar([], state.spriteData, None, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
-    drawToolbar([], state.spriteData, env);
+    drawToolbar([], state.spriteData, None, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
@@ -420,7 +469,7 @@ let draw = (state, env) => {
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, state.spriteData, env);
-    drawToolbar([], state.spriteData, env);
+    drawToolbar([], state.spriteData, None, env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (loseTimer^ < 0.0 || Env.keyPressed(Space, env)) {

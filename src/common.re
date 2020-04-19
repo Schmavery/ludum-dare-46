@@ -77,11 +77,38 @@ type tick =
   | Lose
   | Move(map);
 
-type rect('a) = {
-  top: 'a,
-  left: 'a,
-  width: 'a,
-  height: 'a,
+module Rect = {
+  type t('a) = {
+    top: 'a,
+    left: 'a,
+    width: 'a,
+    height: 'a,
+  };
+
+  let fromPoints =
+      ({x: left, y: top}: Point.t('a), {x: width, y: height}: Point.t('a)) => {
+    top,
+    left,
+    width,
+    height,
+  };
+
+  let containsPt = ({top, left, width, height}, {x, y}: Point.Int.t) => {
+    x >= left && y >= top && x < left + width && y < top + height;
+  };
+
+  let containsPtf = ({top, left, width, height}, {x, y}: Point.Float.t) => {
+    x >= left && y >= top && x < left +. width && y < top +. height;
+  };
+
+  let printf = ({top, left, width, height}) =>
+    Printf.printf(
+      "{top:%f, left:%f, w:%f, h%f}\n%!",
+      top,
+      left,
+      width,
+      height,
+    );
 };
 
 type gameState =
@@ -90,3 +117,12 @@ type gameState =
   | LoseLevel(level)
   | RunningLevel(list(level))
   | PreparingLevel(level);
+
+module Option = {
+  type t('a) = option('a);
+  let iter = (f, o) =>
+    switch (o) {
+    | None => ()
+    | Some(v) => f(v)
+    };
+};
