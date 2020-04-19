@@ -24,9 +24,14 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawTile = (kind, {x, y}: Point.Float.t,
-                ~noBackground=false,
-                spriteData: Sprite.t, env) => {
+let drawTile =
+    (
+      kind,
+      {x, y}: Point.Float.t,
+      ~noBackground=false,
+      spriteData: Sprite.t,
+      env,
+    ) => {
   let halfTileSize = tileSizef /. 2.;
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (kind) {
@@ -37,7 +42,7 @@ let drawTile = (kind, {x, y}: Point.Float.t,
       // TODO: Differentiate the filled pit vs floor.
       | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env)
       };
-    }
+    };
     switch (obj) {
     | Player(_, facing, _) =>
       // TODO: rotate player
@@ -56,16 +61,19 @@ let drawTile = (kind, {x, y}: Point.Float.t,
   };
 };
 
-let getMapTile = (map, {x, y}: Point.Int.t) => {
-  switch (List.nth_opt(map, y)) {
-  | None => Wall
-  | Some(row) =>
-    switch (List.nth_opt(row, x)) {
+let getMapTile = (map, {x, y}: Point.Int.t) =>
+  if (y < 0 || x < 0) {
+    Wall;
+  } else {
+    switch (List.nth_opt(map, y)) {
     | None => Wall
-    | Some(tile) => tile
-    }
+    | Some(row) =>
+      switch (List.nth_opt(row, x)) {
+      | None => Wall
+      | Some(tile) => tile
+      }
+    };
   };
-};
 
 let setMapTile = (map, {x, y}: Point.Int.t, newTile) => {
   List.mapi(
