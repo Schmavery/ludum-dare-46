@@ -370,7 +370,7 @@ let draw = (state, env) => {
     setGameState(Intro);
   };
 
-  Draw.background(Utils.color(~r=255, ~g=217, ~b=229, ~a=255), env);
+  Draw.background(Utils.color(~r=13, ~g=43, ~b=69, ~a=255), env);
 
   switch (levels^, gameState^) {
   | ([], _) => drawMessage("You WON the whole game", 0.0, state.font, env)
