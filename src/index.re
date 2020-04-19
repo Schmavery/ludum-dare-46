@@ -19,6 +19,7 @@ let setup = (spriteData, env): Common.state => {
         Draw.loadImage(~filename=spritesheetLocation, env),
         spriteData,
       ),
+    soundData: Sound.load(env),
     font: Draw.loadFont(~filename=fontPath, env),
   };
 };
@@ -923,11 +924,13 @@ let draw = (state, env) => {
       | (None, _, None) => levelCurrentState
       | (Some(v), _, None) when state.mouse.down =>
         setDragging(Some(v));
+        Sound.play("pickup", state, env);
         levelCurrentState;
       | (Some(_), _, None) => levelCurrentState
       | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
       | (_, Some(mapSquare), Some((draggedI, _))) =>
         setDragging(None);
+        Sound.play("drop", state, env);
         {
           ...levelCurrentState,
           items:

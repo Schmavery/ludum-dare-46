@@ -9,6 +9,7 @@ let tickTimeMS = 600.0;
 let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight -. 2.0 *. btnMargin;
+let basedirname = Filename.dirname(Sys.argv[0]) ++ "/";
 
 module StringMap = Map.Make(String);
 
@@ -38,6 +39,7 @@ type state = {
   hooks: Hooks.t,
   mouse,
   spriteData: Sprite.t,
+  soundData: StringMap.t((Reprocessing.soundT, float)),
   font: fontT,
 };
 
@@ -149,3 +151,34 @@ module List = {
       ),
     );
 };
+
+module Sound = {
+
+  // This is a map of the sound name to the volume level.
+  let names = [
+    ("drop", 1.0),
+    ("pickup", 1.0),
+  ];
+
+  let load = env => {
+    let loadSoundHelper = (sounds, (name: string, volume)) =>
+      StringMap.add(
+        name,
+        (
+          Reprocessing.Env.loadSound(
+            Printf.sprintf("%s/assets/sounds/%s.wav", basedirname, name),
+            env,
+          ),
+          volume,
+        ),
+        sounds,
+      );
+    List.fold_left(loadSoundHelper, StringMap.empty, names);
+  };
+
+  let play = (name, state, env) =>
+    switch (StringMap.find(name, state.soundData)) {
+    | (s, volume) => Reprocessing.Env.playSound(s, ~loop=false, ~volume, env)
+    | exception Not_found => print_endline("Couldn't find sound " ++ name)
+  };
+}
