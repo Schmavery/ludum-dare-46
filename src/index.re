@@ -1,6 +1,8 @@
 open Common;
 open Reprocessing;
 
+let editor = false;
+
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
   let spritesheetLocation = "assets/sprites/spritesheet.png";
@@ -22,16 +24,20 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
+let drawTile = (kind, {x, y}: Point.Float.t, 
+                ~noBackground=false,
+                spriteData: Sprite.t, env) => {
   let halfTileSize = tileSizef /. 2.;
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (kind) {
   | Floor(kind, obj) =>
-    switch (kind) {
-    | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
-    // TODO: Differentiate the filled pit vs floor.
-    | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env)
-    };
+    if (!noBackground) {
+      switch (kind) {
+      | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
+      // TODO: Differentiate the filled pit vs floor.
+      | FilledPit(_) => Assets.drawSprite(spriteData, "floor", ~pos, env)
+      };
+    }
     switch (obj) {
     | Player(_, facing, _) =>
       // TODO: rotate player
@@ -48,6 +54,35 @@ let drawTile = (kind, {x, y}: Point.Float.t, spriteData: Sprite.t, env) => {
   | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env)
   | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env)
   };
+};
+
+let getMapTile = (map, {x, y}: Point.Int.t) => {
+  switch (List.nth_opt(map, y)) {
+  | None => Wall
+  | Some(row) =>
+    switch (List.nth_opt(row, x)) {
+    | None => Wall
+    | Some(tile) => tile
+    }
+  };
+};
+
+let setMapTile = (map, {x, y}: Point.Int.t, newTile) => {
+  List.mapi(
+    (y2, row) => {
+      List.mapi((x2, tile) => x == x2 && y == y2 ? newTile : tile, row)
+    },
+    map,
+  );
+};
+
+let updateMapTile = (map, {x, y}: Point.Int.t, update) => {
+  List.mapi(
+    (y2, row) => {
+      List.mapi((x2, tile) => x == x2 && y == y2 ? update(tile) : tile, row)
+    },
+    map,
+  );
 };
 
 let getInventoryTopLeft = env => {
@@ -75,7 +110,24 @@ let getMapTopLeft = (map, env) => {
 };
 
 let getHoveredMapSquare = (map, env) => {
-  ();
+  let mousePt = Point.Float.ofIntPt(Point.fromPair(Env.mouse(env)));
+  let topLeft = getMapTopLeft(map, env);
+  let mapWidth = tileSizef *. float_of_int(List.length(List.hd(map)));
+  let mapHeight = tileSizef *. float_of_int(List.length(map));
+  let mapRect = Rect.fromPoints(topLeft, Point.create(mapWidth, mapHeight));
+
+  if (Rect.containsPtf(mapRect, mousePt)) {
+    let relativePos = Point.Float.(mousePt - topLeft);
+    let {Point.x, y} as tilePos =
+      Point.Int.ofFloatPt(Point.Float.(relativePos /@ tileSizef));
+    switch (getMapTile(map, tilePos)) {
+    | Floor(Regular, Empty) => Some((x, y))
+    | _ when editor => Some((x, y))
+    | _ => None
+    };
+  } else {
+    None;
+  };
 };
 
 let getHoveredInventoryIndex = env => {
@@ -114,12 +166,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       if (Some(i) == hovered) {
         drawTile(
           Pit,
-          Point.Float.add(topleft, relativePos),
-          spriteData,
-          env,
-        );
-        drawTile(
-          Pit,
+          ~noBackground=true,
           Point.Float.add(topleft, relativePos),
           spriteData,
           env,
@@ -127,6 +174,7 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       } else {
         drawTile(
           item,
+          ~noBackground=true,
           Point.Float.add(topleft, relativePos),
           spriteData,
           env,
@@ -165,35 +213,6 @@ let drawToolbar = (inventory, spriteData, hovered, env) => {
   drawInventory(inventory, spriteData, hovered, env);
 };
 
-let getLevelTile = (level, {x, y}: Point.Int.t) => {
-  switch (List.nth_opt(level, y)) {
-  | None => Wall
-  | Some(row) =>
-    switch (List.nth_opt(row, x)) {
-    | None => Wall
-    | Some(tile) => tile
-    }
-  };
-};
-
-let setLevelTile = (level, {x, y}: Point.Int.t, newTile) => {
-  List.mapi(
-    (y2, row) => {
-      List.mapi((x2, tile) => x == x2 && y == y2 ? newTile : tile, row)
-    },
-    level,
-  );
-};
-
-let updateLevelTile = (level, {x, y}: Point.Int.t, update) => {
-  List.mapi(
-    (y2, row) => {
-      List.mapi((x2, tile) => x == x2 && y == y2 ? update(tile) : tile, row)
-    },
-    level,
-  );
-};
-
 let facingToDelta = facing =>
   switch (facing) {
   | Up => Point.create(0, -1)
@@ -225,14 +244,14 @@ let turnFacing = (facing, move) => {
 let rec resolveMove = (level, pos, moveDelta, preResolved) => {
   let secondPos = Point.Int.add(pos, moveDelta);
   let replaceWith = (level, t1, t2) =>
-    Move(setLevelTile(setLevelTile(level, pos, t1), secondPos, t2));
+    Move(setMapTile(setMapTile(level, pos, t1), secondPos, t2));
 
   let retryResolveMove = level => resolveMove(level, pos, moveDelta, true);
 
   let resolveMove = (level, pos, moveDelta) =>
     !preResolved ? resolveMove(level, pos, moveDelta, false) : Move(level);
 
-  switch (getLevelTile(level, pos), getLevelTile(level, secondPos)) {
+  switch (getMapTile(level, pos), getMapTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
   | (Floor(k1, Boulder(id, health)), Wall) => Move(level)
   | (_, Floor(_, Player(_))) => Lose
@@ -387,15 +406,37 @@ let draw = (state, env) => {
     let (dragging, setDragging) = Hooks.useState(__LOC__, None);
 
     let hoveredItem = getHoveredInventoryIndex(env);
+    let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
 
     // TODO: Figure out if you're over a valid map square when letting go and update the map
-    switch (hoveredItem, dragging^) {
-    | (None, None) => ()
-    | (Some(i), None) when state.mouse.down => setDragging(Some(i))
-    | (Some(i), None) => ()
-    | (_, Some(i)) when Env.mousePressed(env) => ()
-    | (_, Some(i)) => setDragging(None)
-    };
+    let levelCurrentState =
+      switch (hoveredItem, hoveredMapSquare, dragging^) {
+      | (None, _, None) => levelCurrentState
+      | (Some(i), _, None) when state.mouse.down =>
+        setDragging(Some(i));
+        levelCurrentState;
+      | (Some(i), _, None) => levelCurrentState
+      | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
+      | (_, Some((x, y)), Some(draggedI)) =>
+        print_endline("Dropped on tile");
+        setDragging(None);
+        {
+          ...levelCurrentState,
+          items:
+            List.filteri((i, _) => i != draggedI, levelCurrentState.items),
+          map:
+            setMapTile(
+              levelCurrentState.map,
+              Point.create(x, y),
+              List.nth(levelCurrentState.items, draggedI),
+            ),
+        };
+      | (_, _, Some(i)) =>
+        setDragging(None);
+        levelCurrentState;
+      };
+
+    setGameState(PreparingLevel(levelCurrentState));
 
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
@@ -404,12 +445,13 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-    drawToolbar(levelCurrentState.items, state.spriteData, hoveredItem, env);
+    drawToolbar(levelCurrentState.items, state.spriteData, dragging^, env);
     Option.iter(
       i =>
         drawTile(
           List.nth(levelCurrentState.items, i),
           Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
+          ~noBackground=true,
           state.spriteData,
           env,
         ),

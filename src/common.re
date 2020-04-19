@@ -126,3 +126,17 @@ module Option = {
     | Some(v) => f(v)
     };
 };
+
+module List = {
+  include List;
+
+  let filteri = (p: (int, 'a) => bool, l: list('a)) =>
+    fst(
+      List.fold_right(
+        (el, (acc, i)) =>
+          p(i, el) ? ([el, ...acc], i - 1) : (acc, i - 1),
+        l,
+        ([], List.length(l) - 1),
+      ),
+    );
+};
