@@ -23,7 +23,7 @@ let editorItemList = [
 let emptyLevel = {
   title: "Tutorial",
   items: editorItemList,
-  map: Serialize.emptyMap(6, 7),
+  map: Serialize.emptyMap(7, 7),
 };
 
 let boulderPitTutorial = {
@@ -1587,6 +1587,63 @@ let withAFriend = {
   ],
 };
 
+let rotateTutorial = {
+  title: "Rotate Tutorial",
+  items: [Floor(Spinner(CCW), Empty)],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+      Pit,
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Boulder(id(), Hard)),
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(
+        Regular,
+        Player(id(), Right, [Forward, Forward, Forward, Forward]),
+      ),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
+};
+
 let all = [
   boulderPitTutorial,
   placeBoulderTutorial,
@@ -1600,6 +1657,8 @@ let all = [
   ambiguousPath1,
   ambiguousPath2,
   ambiguousPath3,
+  rotateTutorial,
   withAFriend,
 ];
-// let all = [multiPushBoulderTutorial];
+
+// let all = [rotateTutorial];
