@@ -4,6 +4,7 @@ let toolbarItemRowLen = 6;
 let btnMargin = 20.0;
 let tickTimeMS = 500.0;
 let loseMsgTimeMS = 1500.0;
+let winMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
 module StringMap = Map.Make(String);

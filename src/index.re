@@ -407,11 +407,15 @@ let draw = (state, env) => {
     drawMap(levelCurrentState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
-    if (Env.keyPressed(Space, env)) {
-      setGameState(PreparingLevel(nextLevel));
-    };
     drawMap(level.map, spriteData, env);
-    drawMessage("He's safe and sound.", env)
+    let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
+    let deltaTime = Env.deltaTime(env) *. 1000.0;
+    if (winTimer^ < 0.0) {
+      setWinMsgTimer(loseMsgTimeMS);
+      setGameState(PreparingLevel(nextLevel));
+    }
+    setWinMsgTimer(winTimer^ -. deltaTime);
+    drawMessage("You did it! He's safe and sound.", env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
