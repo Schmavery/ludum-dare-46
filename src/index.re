@@ -35,11 +35,34 @@ let drawObj = (~obj, ~pos as {Point.x, y}, ~spriteData, env) => {
       | Right => "guy_right"
       | Left => "guy_left"
       };
-    Assets.drawSprite(spriteData, assetName, ~pos, env);
+    Assets.drawSprite(
+      spriteData,
+      assetName,
+      ~pos,
+      ~width=tileSizef,
+      ~height=tileSizef,
+      env,
+    );
   | Boulder(_, health) =>
     switch (health) {
-    | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
-    | Cracked => Assets.drawSprite(spriteData, "cracked_boulder", ~pos, env)
+    | Hard =>
+      Assets.drawSprite(
+        spriteData,
+        "normal_boulder",
+        ~pos,
+        ~width=tileSizef,
+        ~height=tileSizef,
+        env,
+      )
+    | Cracked =>
+      Assets.drawSprite(
+        spriteData,
+        "cracked_boulder",
+        ~pos,
+        ~width=tileSizef,
+        ~height=tileSizef,
+        env,
+      )
     }
   | Empty => ()
   };
@@ -60,17 +83,48 @@ let drawTile =
   | Floor(kind, obj) =>
     if (!noBackground || editor^) {
       switch (kind) {
-      | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
+      | Regular =>
+        Assets.drawSprite(
+          spriteData,
+          "floor",
+          ~pos,
+          ~width=tileSizef,
+          ~height=tileSizef,
+          env,
+        )
       // TODO: Differentiate the filled pit vs floor.
       | FilledPit(_) =>
-        Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
+        Assets.drawSprite(
+          spriteData,
+          "pit_with_boulder",
+          ~pos,
+          ~width=tileSizef,
+          ~height=tileSizef,
+          env,
+        )
       };
     };
     if (withObj) {
       drawObj(~obj, ~pos={x, y}, ~spriteData, env);
     };
-  | Pit => Assets.drawSprite(spriteData, "pit", ~pos, env)
-  | Wall => Assets.drawSprite(spriteData, "wall", ~pos, env)
+  | Pit =>
+    Assets.drawSprite(
+      spriteData,
+      "pit",
+      ~pos,
+      ~width=tileSizef,
+      ~height=tileSizef,
+      env,
+    )
+  | Wall =>
+    Assets.drawSprite(
+      spriteData,
+      "wall",
+      ~pos,
+      ~width=tileSizef,
+      ~height=tileSizef,
+      env,
+    )
   };
 };
 
@@ -203,6 +257,19 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
   );
 };
 
+let getUndoRect = env => {
+  let height = float_of_int(Env.height(env));
+  let backgroundY = height -. toolbarHeight;
+  let size = tileSizef *. 1.5;
+  Rect.fromPoints(
+    Point.create(
+      btnMargin +. size /. 2.,
+      btnMargin +. size /. 2. +. backgroundY,
+    ),
+    Point.create(size, size),
+  );
+};
+
 let drawToolbar = (inventory, spriteData, hovered, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
@@ -211,22 +278,32 @@ let drawToolbar = (inventory, spriteData, hovered, env) => {
   let backgroundY = height -. toolbarHeight;
   Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
 
-  Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
-  Draw.rectf(
-    ~pos=(btnMargin, btnMargin +. backgroundY),
-    ~width=btnSize,
-    ~height=btnSize,
+  // Reset
+  let rect = getUndoRect(env);
+  Assets.drawSprite(
+    spriteData,
+    "undo",
+    ~pos=Point.create(rect.left, rect.top),
+    ~width=rect.width,
+    ~height=rect.height,
     env,
   );
+  // Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
+  // Draw.rectf(
+  //   ~pos=(btnMargin, btnMargin +. backgroundY),
+  //   ~width=btnSize,
+  //   ~height=btnSize,
+  //   env,
+  // );
 
-  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  let x = btnMargin +. (btnMargin +. btnSize) *. 1.;
-  Draw.rectf(
-    ~pos=(x, btnMargin +. backgroundY),
-    ~width=btnSize,
-    ~height=btnSize,
-    env,
-  );
+  // Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
+  // let x = btnMargin +. (btnMargin +. btnSize) *. 1.;
+  // Draw.rectf(
+  //   ~pos=(x, btnMargin +. backgroundY),
+  //   ~width=btnSize,
+  //   ~height=btnSize,
+  //   env,
+  // );
 
   Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
   let x = btnMargin +. (btnMargin +. btnSize) *. 2.;
@@ -527,27 +604,39 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
     let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
     drawObj(~obj, ~pos, ~spriteData, env);
   };
-  let calculateBounce = (elapsedTime, pos:Point.Float.t, prevPos:Point.Float.t) => {
+  let calculateBounce =
+      (elapsedTime, pos: Point.Float.t, prevPos: Point.Float.t) => {
     let numBounces = 2.;
     // TODO: There's something we could do here to ease more proportionally.
-    let time = easeInOutQuad(elapsedTime/.tickTimeMS);
+    let time = easeInOutQuad(elapsedTime /. tickTimeMS);
 
-    let bounce = Utils.remapf(
-      ~value=time,
-      ~low1=0.,
-      ~high1=1.0,
-      ~low2=0.,
-      ~high2=numBounces*.Constants.pi,
-    );
+    let bounce =
+      Utils.remapf(
+        ~value=time,
+        ~low1=0.,
+        ~high1=1.0,
+        ~low2=0.,
+        ~high2=numBounces *. Constants.pi,
+      );
 
     // If we're moving in the x position, we need to calculate gravity from a Y perspective
-    let bounceY = if (prevPos.x != pos.x) { sin(bounce) *. 6. } else { 0. };
+    let bounceY =
+      if (prevPos.x != pos.x) {
+        sin(bounce) *. 6.;
+      } else {
+        0.;
+      };
 
     // If we're moving in the y position, we need to calculate gravity from the X perspective
-    let bounceX = if (prevPos.y != pos.y ) { sin(bounce) *. 6. } else { 0. };
+    let bounceX =
+      if (prevPos.y != pos.y) {
+        sin(bounce) *. 6.;
+      } else {
+        0.;
+      };
 
-    let bounceX = abs_float(bounceX) *. -1.0;
-    let bounceY = abs_float(bounceY) *. -1.0;
+    let bounceX = abs_float(bounceX) *. (-1.0);
+    let bounceY = abs_float(bounceY) *. (-1.0);
 
     Point.Float.(create(bounceX, bounceY));
   };
@@ -608,12 +697,14 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
                     ~high2=pos.y,
                   );
 
-                let animatedPosition = Point.Float.create(animatingPosX, animatingPosY);
-                let bouncedPosition = switch(tile) {
+                let animatedPosition =
+                  Point.Float.create(animatingPosX, animatingPosY);
+                let bouncedPosition =
+                  switch (tile) {
                   | Floor(_, Player(_, _, _)) =>
-                    calculateBounce(elapsedTime, pos, prevPos);
-                  | _ => Point.Float.create(0., 0.);
-                };
+                    calculateBounce(elapsedTime, pos, prevPos)
+                  | _ => Point.Float.create(0., 0.)
+                  };
 
                 drawObj(
                   ~obj,
@@ -643,6 +734,17 @@ let draw = (state, env) => {
   // This value always starts at MAX so we tick once immediately
   let (lastTickTime, setLastTickTime) =
     Hooks.useState(__LOC__, tickTimeMS +. 1.);
+
+  let undo =
+    if (Env.mousePressed(env)) {
+      let rect = getUndoRect(env);
+      rect->Rect.containsPtf(
+        Point.(Float.ofIntPt(fromPair(Env.mouse(env)))),
+      );
+    } else {
+      false;
+    };
+  let restarted = Env.keyPressed(R, env);
 
   if (Env.keyPressed(T, env)) {
     setLevels(Levels.all);
@@ -779,7 +881,7 @@ let draw = (state, env) => {
 
     setGameState(PreparingLevel(levelCurrentState));
 
-    if (Env.keyPressed(R, env)) {
+    if (restarted) {
       setGameState(PreparingLevel(levelInitialState));
     };
     if (Env.keyPressed(Space, env)) {
@@ -873,7 +975,7 @@ let draw = (state, env) => {
       );
     };
     drawToolbar([], state.spriteData, None, env); // TODO: Any items?
-    if (Env.keyPressed(R, env)) {
+    if (restarted) {
       setGameState(PreparingLevel(levelInitialState));
       setLastTickTime(tickTimeMS +. 1.);
     };

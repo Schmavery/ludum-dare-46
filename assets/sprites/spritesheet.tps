@@ -234,6 +234,21 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">undo.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>90,60,180,120</rect>
+                <key>scale9Paddings</key>
+                <rect>90,60,180,120</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
         </map>
         <key>fileList</key>
         <array>
@@ -248,6 +263,7 @@
             <filename>guy_up.png</filename>
             <filename>pit_with_boulder.png</filename>
             <filename>pit_with_cracked_boulder.png</filename>
+            <filename>undo.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

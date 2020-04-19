@@ -1,7 +1,7 @@
 open Reprocessing;
 
 let tileSizef = 50.;
-let toolbarHeight = 90.0;
+let toolbarHeight = 110.0;
 let toolbarItemRowLen = 10;
 let btnMargin = 20.0;
 let fontHeight = 50;
