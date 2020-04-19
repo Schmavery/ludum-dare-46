@@ -170,11 +170,12 @@ let getHoveredInventoryIndex = env => {
 
   if (Rect.containsPtf(inventoryRect, mousePt)) {
     let relativePos = Point.Float.(mousePt - inventoryTopLeft);
+    let tileAndMargin = tileSizef +. btnMargin;
+    let hoverOffset =
+      Point.map(~f=v => mod_float(v, tileAndMargin), relativePos);
     let {x, y}: Point.Int.t =
-      Point.Int.ofFloatPt(
-        Point.Float.(relativePos /@ (tileSizef +. btnMargin)),
-      );
-    Some(x + y * toolbarItemRowLen);
+      Point.Int.ofFloatPt(Point.Float.(relativePos /@ tileAndMargin));
+    Some((x + y * toolbarItemRowLen, hoverOffset));
   } else {
     None;
   };
@@ -652,16 +653,15 @@ let draw = (state, env) => {
       Serialize.map(levelCurrentState.map);
     };
 
-    // TODO: Figure out if you're over a valid map square when letting go and update the map
     let levelCurrentState =
       switch (hoveredItem, hoveredMapSquare, dragging^) {
       | (None, _, None) => levelCurrentState
-      | (Some(i), _, None) when state.mouse.down =>
-        setDragging(Some(i));
+      | (Some(v), _, None) when state.mouse.down =>
+        setDragging(Some(v));
         levelCurrentState;
-      | (Some(i), _, None) => levelCurrentState
+      | (Some(_), _, None) => levelCurrentState
       | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
-      | (_, Some((x, y)), Some(draggedI)) =>
+      | (_, Some((x, y)), Some((draggedI, _))) =>
         setDragging(None);
         {
           ...levelCurrentState,
@@ -692,12 +692,19 @@ let draw = (state, env) => {
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
     drawObjects(levelCurrentState.map, state.spriteData, env);
-    drawToolbar(levelCurrentState.items, state.spriteData, dragging^, env);
+    drawToolbar(
+      levelCurrentState.items,
+      state.spriteData,
+      Option.map(fst, dragging^),
+      env,
+    );
     Option.iter(
-      i =>
+      ((i, dragOffset)) =>
         drawTile(
           List.nth(levelCurrentState.items, i),
-          Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
+          Point.Float.(
+            ofIntPt(Point.fromPair(Env.mouse(env))) - dragOffset
+          ),
           ~noBackground=true,
           ~withObj=true,
           state.spriteData,

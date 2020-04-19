@@ -126,6 +126,12 @@ module Option = {
     | None => ()
     | Some(v) => f(v)
     };
+
+  let map = (f, o) =>
+    switch (o) {
+    | Some(v) => Some(f(v))
+    | None => None
+    };
 };
 
 module List = {
