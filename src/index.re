@@ -49,13 +49,14 @@ let drawTile =
     };
     switch (obj) {
     | Player(_, facing, _) =>
-      let assetName = switch (facing) {
+      let assetName =
+        switch (facing) {
         | Up => "guy_up"
         | Down => "guy_down"
         | Right => "guy_right"
         | Left => "guy_left"
-      };
-      Assets.drawSprite(spriteData, assetName, ~pos, env)
+        };
+      Assets.drawSprite(spriteData, assetName, ~pos, env);
     | Boulder(_, health) =>
       switch (health) {
       | Hard => Assets.drawSprite(spriteData, "normal_boulder", ~pos, env)
@@ -371,6 +372,75 @@ let drawMessage = (message, offset, font, ~withBackground=true, env) => {
   Draw.noTint(env);
 };
 
+let drawLines = (map, mapTopLeft, env) => {
+  let textHeight = 40;
+  let textVerticalOffset = 50;
+  let textHorizontalOffset = 10;
+
+  let halfTileSize = tileSizef /. 2.;
+  let centerOffset = Point.create(halfTileSize, halfTileSize);
+
+  List.iteri(
+    (y, row) => {
+      List.iteri(
+        (x, tile) => {
+          switch (tile) {
+          | Floor(_, Player(id, facing, moves)) =>
+            let (_, mapPositions) =
+              List.fold_left(
+                ((currFacing, [prevPoint, ...rest]), move) =>
+                  switch (move) {
+                  | Forward => (
+                      facing,
+                      [
+                        Point.Int.add(facingToDelta(currFacing), prevPoint),
+                        prevPoint,
+                        ...rest,
+                      ],
+                    )
+                  | turn => (turnFacing(facing, turn), [prevPoint, ...rest])
+                  },
+                (facing, [Point.(create(x, y))]),
+                moves,
+              );
+
+            let screenPositions =
+              List.map(
+                p =>
+                  Point.Float.(
+                    ofIntPt(p) *@ tileSizef + centerOffset + mapTopLeft
+                  ),
+                mapPositions,
+              );
+
+            Draw.stroke(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
+            let _ =
+              List.fold_left(
+                (acc, pos) =>
+                  switch (acc) {
+                  | None => Some(pos)
+                  | Some(prevPos) =>
+                    Draw.linef(
+                      ~p1=Point.toPair(prevPos),
+                      ~p2=Point.toPair(pos),
+                      env,
+                    );
+                    Some(pos);
+                  },
+                None,
+                screenPositions,
+              );
+            ();
+          | _ => ()
+          }
+        },
+        row,
+      )
+    },
+    map,
+  );
+};
+
 let drawMap = (map, spriteData, env) => {
   let topleft = getMapTopLeft(map, env);
   List.iteri(
@@ -390,6 +460,7 @@ let drawMap = (map, spriteData, env) => {
     },
     map,
   );
+  drawLines(map, topleft, env);
 };
 
 let draw = (state, env) => {
