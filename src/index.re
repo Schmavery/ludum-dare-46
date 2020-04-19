@@ -1,7 +1,7 @@
 open Common;
 open Reprocessing;
 
-let editor = true;
+let editor = ref(true);
 
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
@@ -39,7 +39,7 @@ let drawTile =
   let pos = Point.create(x +. halfTileSize, y +. halfTileSize);
   switch (kind) {
   | Floor(kind, obj) =>
-    if (!noBackground) {
+    if (!noBackground || editor^) {
       switch (kind) {
       | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
       // TODO: Differentiate the filled pit vs floor.
@@ -138,7 +138,7 @@ let getHoveredMapSquare = (map, env) => {
       Point.Int.ofFloatPt(Point.Float.(relativePos /@ tileSizef));
     switch (getMapTile(map, tilePos)) {
     | Floor(Regular, Empty) => Some((x, y))
-    | _ when editor => Some((x, y))
+    | _ when editor^ => Some((x, y))
     | _ => None
     };
   } else {
@@ -468,10 +468,14 @@ let draw = (state, env) => {
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
   let (gameState, setGameState) = Hooks.useState(__LOC__, Intro);
 
-  if (editor && Env.keyPressed(T, env)) {
+  if (editor^ && Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
   };
+
+  if (Env.keyPressed(E, env)) {
+    editor := !editor^
+  }
 
   Draw.background(Utils.color(~r=13, ~g=43, ~b=69, ~a=255), env);
 
@@ -491,7 +495,7 @@ let draw = (state, env) => {
     let hoveredItem = getHoveredInventoryIndex(env);
     let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
 
-    if (editor && Env.keyPressed(P, env)) {
+    if (editor^ && Env.keyPressed(P, env)) {
       Serialize.map(levelCurrentState.map);
     };
 
@@ -509,7 +513,7 @@ let draw = (state, env) => {
         {
           ...levelCurrentState,
           items:
-            List.filteri((i, _) => i != draggedI, levelCurrentState.items),
+            List.filteri((i, _) => (editor^ || i != draggedI), levelCurrentState.items),
           map:
             setMapTile(
               levelCurrentState.map,
@@ -531,11 +535,13 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-    drawToolbar(levelCurrentState.items, state.spriteData, dragging^, env);
+
+    let inventory = editor^ ? Levels.editorItemList : levelCurrentState.items;
+    drawToolbar(inventory, state.spriteData, dragging^, env);
     Option.iter(
       i =>
         drawTile(
-          List.nth(levelCurrentState.items, i),
+          List.nth(inventory, i),
           Point.Float.ofIntPt(Point.fromPair(Env.mouse(env))),
           ~noBackground=true,
           state.spriteData,
@@ -546,7 +552,7 @@ let draw = (state, env) => {
 
   | (
       [levelInitialState, ...restOfLevels],
-      RunningLevel([levelCurrentState, ...pastLevelStates]),
+      RunningLevel([levelCurrentState, ...pastLevelStates] as allLevelStates),
     ) =>
     let (lastTickTime, setLastTickTime) = Hooks.useState(__LOC__, 0.0);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
@@ -566,13 +572,17 @@ let draw = (state, env) => {
           ]),
         );
       | Win =>
-        setLevels(restOfLevels);
-        setGameState(WinLevel(levelCurrentState));
+        if (editor^) {
+          setGameState(PreparingLevel(List.nth(allLevelStates, List.length(allLevelStates) - 1),));
+        } else {
+          setLevels(restOfLevels);
+          setGameState(WinLevel(levelCurrentState));
+        }
         setLastTickTime(0.0);
       | Lose =>
         setGameState(
           LoseLevel(
-            List.nth(pastLevelStates, List.length(pastLevelStates) - 1),
+            List.nth(allLevelStates, List.length(allLevelStates) - 1),
           ),
         );
         setLastTickTime(0.0);

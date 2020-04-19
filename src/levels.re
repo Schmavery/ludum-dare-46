@@ -8,6 +8,23 @@ let id = {
   };
 };
 
+let editorItemList = [
+  Floor(Regular, Empty),
+  Floor(Regular, Boulder(id(), Hard)),
+  Floor(Regular, Boulder(id(), Hard)),
+  Floor(Regular, Boulder(id(), Cracked)),
+  Floor(Regular, Player(id(), Right, [Forward, Forward])),
+  Floor(FilledPit(id()), Empty), // We don't need filled pit
+  Wall,
+  Pit,
+];
+
+let emptyLevel = {
+  title: "Tutorial",
+  items: [],
+  map: Serialize.emptyMap(10, 6),
+};
+
 let level1 = {
   title: "Tutorial",
   items: [
