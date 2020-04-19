@@ -179,23 +179,18 @@ let drawInventory = (inventory, spriteData, hovered, env) => {
       let y = (tileSizef +. btnMargin) *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
       if (Some(i) == hovered) {
-        let newPos = Point.Float.add(topleft, relativePos);
-        Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
-        Draw.rectf(
-          ~pos=(newPos.x, newPos.y),
-          ~width=tileSizef,
-          ~height=tileSizef,
-          env,
-        );
-      } else {
-        drawTile(
-          item,
-          ~noBackground=true,
-          Point.Float.add(topleft, relativePos),
-          spriteData,
-          env,
-        );
-      };
+        Draw.tint(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+      }
+      drawTile(
+        item,
+        ~noBackground=true,
+        Point.Float.add(topleft, relativePos),
+        spriteData,
+        env,
+      );
+      if (Some(i) == hovered) {
+        Draw.noTint(env);
+      }
     },
     inventory,
   );
