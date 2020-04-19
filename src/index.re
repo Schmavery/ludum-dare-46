@@ -1,7 +1,7 @@
 open Common;
 open Reprocessing;
 
-let editor = false;
+let editor = true;
 
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
@@ -13,7 +13,10 @@ let setup = (spriteData, env): Common.state => {
       down: false,
       up: false,
       pressed: false,
-      pos: Point.fromPair(Env.mouse(env)),
+      pos: {
+        x: 0,
+        y: 0,
+      },
     },
     spriteData:
       Sprite.create(
@@ -40,7 +43,8 @@ let drawTile =
       switch (kind) {
       | Regular => Assets.drawSprite(spriteData, "floor", ~pos, env)
       // TODO: Differentiate the filled pit vs floor.
-      | FilledPit(_) => Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
+      | FilledPit(_) =>
+        Assets.drawSprite(spriteData, "pit_with_boulder", ~pos, env)
       };
     };
     switch (obj) {
@@ -417,7 +421,7 @@ let draw = (state, env) => {
     let hoveredItem = getHoveredInventoryIndex(env);
     let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
 
-    if (Env.keyPressed(P, env)) {
+    if (editor && Env.keyPressed(P, env)) {
       Serialize.map(levelCurrentState.map);
     };
 
