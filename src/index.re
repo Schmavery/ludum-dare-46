@@ -13,10 +13,6 @@ let setup = (spriteData, env): Common.state => {
       down: false,
       up: false,
       pressed: false,
-      pos: {
-        x: 0,
-        y: 0,
-      },
     },
     spriteData:
       Sprite.create(
@@ -112,7 +108,6 @@ let updateMapTile = (map, {x, y}: Point.Int.t, update) => {
 
 let getInventoryTopLeft = env => {
   let height = float_of_int(Env.height(env));
-  let x = 0.0;
   let backgroundY = height -. toolbarHeight;
   let xOffset = btnMargin +. (btnMargin +. btnSize) *. 4.0;
   let yOffset = backgroundY +. btnMargin;
@@ -402,10 +397,6 @@ let drawMessage = (message, offset, font, ~withBackground=true, env) => {
 };
 
 let drawLines = (map, mapTopLeft, env) => {
-  let textHeight = 40;
-  let textVerticalOffset = 50;
-  let textHorizontalOffset = 10;
-
   let halfTileSize = tileSizef /. 2.;
   let centerOffset = Point.create(halfTileSize, halfTileSize);
 
@@ -836,7 +827,6 @@ let draw = (state, env) => {
 let mouseDown = (state, _) => {
   ...state,
   mouse: {
-    ...state.mouse,
     down: true,
     up: false,
     pressed: true,
@@ -845,7 +835,6 @@ let mouseDown = (state, _) => {
 let mouseUp = (state, _) => {
   ...state,
   mouse: {
-    ...state.mouse,
     down: false,
     up: true,
     pressed: false,

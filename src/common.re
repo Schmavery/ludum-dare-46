@@ -9,7 +9,6 @@ let tickTimeMS = 600.0;
 let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight -. 2.0 *. btnMargin;
-// let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
 module StringMap = Map.Make(String);
 
@@ -33,7 +32,6 @@ type mouse = {
   down: bool,
   up: bool,
   pressed: bool,
-  pos: Point.Int.t,
 };
 
 type state = {
