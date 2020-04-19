@@ -1,10 +1,15 @@
 open Common;
 open Reprocessing;
 
+<<<<<<< HEAD
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
   let spritesheetLocation = "assets/sprites/spritesheet.png";
 
+=======
+let setup = (env): state => {
+  let fontPath = "assets/font/ptsans_regular_2x.fnt";
+>>>>>>> 56ff067eaeaa6dfea5de313318575f0e7ef0bffb
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -14,10 +19,13 @@ let setup = (spriteData, env): Common.state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
+<<<<<<< HEAD
     spriteData: Sprite.create(
         Draw.loadImage(~filename=spritesheetLocation, env),
         spriteData,
       ),
+=======
+>>>>>>> 56ff067eaeaa6dfea5de313318575f0e7ef0bffb
     font: Draw.loadFont(~filename=fontPath, env),
   };
 };
@@ -410,6 +418,7 @@ let draw = (state, env) => {
     drawToolbar([], state.spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
+    drawToolbar([], env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
@@ -417,7 +426,8 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(nextLevel));
     }
     setWinMsgTimer(winTimer^ -. deltaTime);
-    drawMessage("You did it! He's safe and sound.", toolbarHeight, state.font, env)
+    drawMessage("You did it!", toolbarHeight, state.font, env)
+    drawMessage("He's safe and sound.", toolbarHeight -. 90., state.font, env)
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
     drawToolbar([], env);
