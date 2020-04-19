@@ -330,12 +330,16 @@ let draw = (state, env) => {
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
     ) =>
+    let (lastTickTime, setLastTickTime) = Hooks.useState(__LOC__, 0.0);
+    let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(R, env)) {
       setGameState(PreparingLevel(levelInitialState));
+      setLastTickTime(0.0);
     };
-    if (Env.keyPressed(Space, env)) {
+    if (lastTickTime^ > Common.tickTimeMS) {
       switch (tick(levelCurrentState.map)) {
       | Move(level) =>
+        setLastTickTime(0.0);
         setGameState(
           RunningLevel([
             {...levelCurrentState, map: level},
@@ -346,8 +350,14 @@ let draw = (state, env) => {
       | Win =>
         setLevels(restOfLevels);
         setGameState(WinLevel(levelCurrentState));
-      | Lose => setGameState(LoseLevel)
+        setLastTickTime(0.0);
+      | Lose => {
+        setGameState(LoseLevel);
+        setLastTickTime(0.0);
+      }
       };
+    } else {
+      setLastTickTime(lastTickTime^ +. deltaTime);
     };
     drawMap(levelCurrentState.map, env);
     drawControls(env);

@@ -2,6 +2,7 @@ let tileSizef = 50.;
 let toolbarHeight = 180.0;
 let toolbarItemRowLen = 6;
 let btnMargin = 20.0;
+let tickTimeMS = 500.0;
 
 type mouse = {
   down: bool,
