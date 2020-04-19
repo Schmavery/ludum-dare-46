@@ -361,7 +361,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, env);
-    drawInventory(levelCurrentState.items, state.spriteData, env);
+    drawToolbar(levelCurrentState.items, state.spriteData, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -402,7 +402,7 @@ let draw = (state, env) => {
     drawToolbar([], state.spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, env);
-    drawToolbar([], env);
+    drawToolbar([], state.spriteData, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
@@ -419,7 +419,7 @@ let draw = (state, env) => {
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
-    drawToolbar([], env);
+    drawToolbar([], state.spriteData, env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (loseTimer^ < 0.0 || Env.keyPressed(Space, env)) {
