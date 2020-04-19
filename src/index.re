@@ -410,7 +410,7 @@ let draw = (state, env) => {
     drawMap(level.map, spriteData, env);
     let (winTimer, setWinMsgTimer) = Hooks.useState(__LOC__, winMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
-    if (winTimer^ < 0.0) {
+    if (winTimer^ < 0.0 || Env.keyPressed(Space, env)) {
       setWinMsgTimer(loseMsgTimeMS);
       setGameState(PreparingLevel(nextLevel));
     }
@@ -421,7 +421,7 @@ let draw = (state, env) => {
     drawToolbar([], env);
     let (loseTimer, setLoseTimer) = Hooks.useState(__LOC__, loseMsgTimeMS);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
-    if (loseTimer^ < 0.0) {
+    if (loseTimer^ < 0.0 || Env.keyPressed(Space, env)) {
       setLoseTimer(loseMsgTimeMS);
       setGameState(PreparingLevel(prepLevelState));
     };
