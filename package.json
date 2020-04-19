@@ -10,7 +10,8 @@
     "reformat": "bsrefmt --in-place $(find src -name '*.re' -print)"
   },
   "dependencies": {
-    "reprocessing": "Schmavery/reprocessing"
+    "reprocessing": "Schmavery/reprocessing",
+    "rex-json": "github:bsansouci/rex-json"
   },
   "devDependencies": {
     "bsb-native": "^5.0.0",
