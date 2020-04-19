@@ -394,7 +394,7 @@ let draw = (state, env) => {
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
   let (gameState, setGameState) = Hooks.useState(__LOC__, Intro);
 
-  if (Env.keyPressed(T, env)) {
+  if (editor && Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
   };
@@ -416,6 +416,10 @@ let draw = (state, env) => {
 
     let hoveredItem = getHoveredInventoryIndex(env);
     let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
+
+    if (Env.keyPressed(P, env)) {
+      Serialize.map(levelCurrentState.map);
+    };
 
     // TODO: Figure out if you're over a valid map square when letting go and update the map
     let levelCurrentState =
