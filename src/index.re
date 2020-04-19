@@ -141,8 +141,8 @@ let getHoveredMapSquare = (map, env) => {
     let {Point.x, y} as tilePos =
       Point.Int.ofFloatPt(Point.Float.(relativePos /@ tileSizef));
     switch (getMapTile(map, tilePos)) {
-    | Floor(Regular, Empty) => Some((x, y))
-    | _ when editor^ => Some((x, y))
+    | Floor(Regular, Empty) => Some(Point.create(x, y))
+    | _ when editor^ => Some(Point.create(x, y))
     | _ => None
     };
   } else {
@@ -367,8 +367,7 @@ let tick = level => {
     (level, agent) =>
       switch (level, agent) {
       | (Move(level), Push(facing, pos)) =>
-        Point.Int.print(pos);
-        resolveMove(level, pos, facingToDelta(facing), false);
+        resolveMove(level, pos, facingToDelta(facing), false)
       | (_, AgentWin)
       | (Win, _) => Win
       | (Lose, _) => Lose // TODO: Might still want to resolve the rest of the moves..
@@ -622,7 +621,11 @@ let draw = (state, env) => {
     editor := ! editor^;
   };
 
-  Draw.background(Utils.color(~r=13, ~g=43, ~b=69, ~a=255), env);
+  if (editor^) {
+    Draw.background(Constants.red, env);
+  } else {
+    Draw.background(Utils.color(~r=13, ~g=43, ~b=69, ~a=255), env);
+  };
 
   switch (levels^, gameState^) {
   | ([], _) => drawMessage("You WON the whole game", 0.0, state.font, env)
@@ -645,6 +648,74 @@ let draw = (state, env) => {
     };
 
     let levelCurrentState =
+      if (editor^) {
+        let removeLast = l =>
+          switch (List.rev(l)) {
+          | [_, ...tl] => List.rev(tl)
+          | [] => []
+          };
+
+        let append = (e, l) => List.rev([e, ...List.rev(l)]);
+
+        let hoveredTile =
+          Option.map(
+            p => (getMapTile(levelCurrentState.map, p), p),
+            hoveredMapSquare,
+          );
+        switch (hoveredTile) {
+        | Some((Floor(k, Player(id, facing, moves)), pt)) =>
+          if (Env.keyPressed(Backspace, env) || Env.keyPressed(Down, env)) {
+            {
+              ...levelCurrentState,
+              map:
+                setMapTile(
+                  levelCurrentState.map,
+                  pt,
+                  Floor(k, Player(id, facing, removeLast(moves))),
+                ),
+            };
+          } else if (Env.keyPressed(Right, env)) {
+            {
+              ...levelCurrentState,
+              map:
+                setMapTile(
+                  levelCurrentState.map,
+                  pt,
+                  Floor(k, Player(id, facing, append(TurnRight, moves))),
+                ),
+            };
+          } else if (Env.keyPressed(Left, env)) {
+            {
+              ...levelCurrentState,
+              map:
+                setMapTile(
+                  levelCurrentState.map,
+                  pt,
+                  Floor(k, Player(id, facing, append(TurnLeft, moves))),
+                ),
+            };
+          } else if (Env.keyPressed(Up, env)) {
+            {
+              ...levelCurrentState,
+              map:
+                setMapTile(
+                  levelCurrentState.map,
+                  pt,
+                  Floor(k, Player(id, facing, append(Forward, moves))),
+                ),
+            };
+          } else {
+            levelCurrentState;
+          }
+
+        | Some(_)
+        | None => levelCurrentState
+        };
+      } else {
+        levelCurrentState;
+      };
+
+    let levelCurrentState =
       switch (hoveredItem, hoveredMapSquare, dragging^) {
       | (None, _, None) => levelCurrentState
       | (Some(v), _, None) when state.mouse.down =>
@@ -652,7 +723,7 @@ let draw = (state, env) => {
         levelCurrentState;
       | (Some(_), _, None) => levelCurrentState
       | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
-      | (_, Some((x, y)), Some((draggedI, _))) =>
+      | (_, Some(mapSquare), Some((draggedI, _))) =>
         setDragging(None);
         {
           ...levelCurrentState,
@@ -664,7 +735,7 @@ let draw = (state, env) => {
           map:
             setMapTile(
               levelCurrentState.map,
-              Point.create(x, y),
+              mapSquare,
               List.nth(levelCurrentState.items, draggedI),
             ),
         };
