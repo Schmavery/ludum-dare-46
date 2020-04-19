@@ -8,7 +8,6 @@ let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
 module StringMap = Map.Make(String);
 
-
 module Sprite = {
   type spriteEntry = {
     x: int,
@@ -35,7 +34,7 @@ type mouse = {
 type state = {
   hooks: Hooks.t,
   mouse,
-  sprites: Sprite.t
+  spriteData: Sprite.t
 };
 
 type id = int;

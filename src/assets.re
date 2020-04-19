@@ -1,4 +1,5 @@
 open Common;
+open Reprocessing;
 
 let spriteSize = 120.;
 
@@ -36,7 +37,7 @@ let loadSpriteSheet = (filename, cb) =>
 let placeholder = (name, ~pos, ~width, ~height, env) => {
   Draw.fill(Constants.red, env);
   Draw.noStroke(env);
-  Draw.rectf(~pos=Point.(toPair(pos)), ~width, ~height, env);
+  Draw.rectf(~pos=Point.Float.(toPair(pos)), ~width, ~height, env);
   Draw.text(
     ~body=name,
     ~pos=(int_of_float(pos.x), int_of_float(pos.y)),
@@ -51,7 +52,7 @@ let drawSprite = (t, name, ~pos, ~scale=1.0, env) => {
     let height = float_of_int(h) *. scale;
     Draw.subImagef(
       t.sheet,
-      ~pos=Point.(toPair(pos - create(width /. 2., height /. 2.))),
+      ~pos=Point.Float.(toPair(pos - create(width /. 2., height /. 2.))),
       ~width,
       ~height,
       ~texPos=(x, y),
@@ -62,7 +63,7 @@ let drawSprite = (t, name, ~pos, ~scale=1.0, env) => {
   | exception Not_found =>
     placeholder(
       name,
-      ~pos=Point.(pos - create(spriteSize /. 2, spriteSize /. 2)),
+      ~pos=Point.Float.(pos - create(spriteSize /. 2., spriteSize /. 2.)),
       ~width=spriteSize,
       ~height=spriteSize,
       env,

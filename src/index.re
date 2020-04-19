@@ -3,7 +3,7 @@ open Reprocessing;
 
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/PTSans-Regular.ttf.fnt";
-  let spritesheetLocation = "assets/spritesheet/spritesheet.png";
+  let spritesheetLocation = "assets/sprites/spritesheet.png";
 
   Env.size(~width=600, ~height=600, env);
   {
@@ -14,7 +14,7 @@ let setup = (spriteData, env): Common.state => {
       pressed: false,
       pos: Point.fromPair(Env.mouse(env)),
     },
-    sprites: Sprite.create(
+    spriteData: Sprite.create(
         Draw.loadImage(~filename=spritesheetLocation, env),
         spriteData,
       ),
@@ -109,9 +109,9 @@ let drawInventory = (inventory, spriteData, env) => {
         *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
       if (i == getHoveredInventoryIndex(Point.fromPair(Env.mouse(env)), env)) {
-        drawTile(Pit, Point.Float.add(topleft, relativePos), env);
+        drawTile(Pit, Point.Float.add(topleft, relativePos), spriteData, env);
       } else {
-        drawTile(item, Point.Float.add(topleft, relativePos), env);
+        drawTile(item, Point.Float.add(topleft, relativePos), spriteData, env);
       };
     },
     inventory,
@@ -364,8 +364,8 @@ let draw = (state, env) => {
     if (Env.keyPressed(Space, env)) {
       setGameState(RunningLevel([levelCurrentState]));
     };
-    drawMap(levelCurrentState.map, spriteData, env);
-    drawInventory(levelCurrentState.items, spriteData, env);
+    drawMap(levelCurrentState.map, state.spriteData, env);
+    drawInventory(levelCurrentState.items, state.spriteData, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -402,13 +402,13 @@ let draw = (state, env) => {
     } else {
       setLastTickTime(lastTickTime^ +. deltaTime);
     };
-    drawMap(levelCurrentState.map, spriteData, env);
-    drawToolbar([], spriteData, env); // TODO: Any items?
+    drawMap(levelCurrentState.map, state.spriteData, env);
+    drawToolbar([], state.spriteData, env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));
     };
-    drawMap(level.map, spriteData, env);
+    drawMap(level.map, state.spriteData, env);
     Draw.text(~body="You WIN", ~pos=(100, 100), env);
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, env);
@@ -424,6 +424,7 @@ let draw = (state, env) => {
   };
 
   {
+    ...state,
     hooks: Hooks.finalize(),
     mouse: {
       ...state.mouse,
@@ -452,7 +453,7 @@ let mouseUp = (state, _) => {
   },
 };
 
-Assets.loadSpriteSheet("assets/spritesheet/sprites.json", (assets) => 
-  run(~setup, ~draw, ~mouseDown, ~mouseUp, ())
+Assets.loadSpriteSheet("assets/sprites/spritesheet.json", (assets) => 
+  run(~setup=setup(assets), ~draw, ~mouseDown, ~mouseUp, ())
 );
 
