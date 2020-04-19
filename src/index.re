@@ -24,7 +24,7 @@ let setup = (spriteData, env): Common.state => {
   };
 };
 
-let drawTile = (kind, {x, y}: Point.Float.t, 
+let drawTile = (kind, {x, y}: Point.Float.t,
                 ~noBackground=false,
                 spriteData: Sprite.t, env) => {
   let halfTileSize = tileSizef /. 2.;
@@ -246,7 +246,8 @@ let rec resolveMove = (level, pos, moveDelta, preResolved) => {
   let replaceWith = (level, t1, t2) =>
     Move(setMapTile(setMapTile(level, pos, t1), secondPos, t2));
 
-  let retryResolveMove = level => resolveMove(level, pos, moveDelta, true);
+  let retryResolveMove = level =>
+    !preResolved ? resolveMove(level, pos, moveDelta, true) : Move(level);
 
   let resolveMove = (level, pos, moveDelta) =>
     !preResolved ? resolveMove(level, pos, moveDelta, false) : Move(level);
