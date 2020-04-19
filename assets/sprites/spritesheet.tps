@@ -132,7 +132,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename></filename>
+                <filename>spritesheet.json</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -197,7 +197,13 @@
                 <false/>
             </struct>
             <key type="filename">floor.png</key>
+            <key type="filename">guy_down.png</key>
+            <key type="filename">guy_left.png</key>
+            <key type="filename">guy_right.png</key>
+            <key type="filename">guy_up.png</key>
             <key type="filename">pit.png</key>
+            <key type="filename">pit_with_boulder.png</key>
+            <key type="filename">pit_with_cracked_boulder.png</key>
             <key type="filename">wall.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -210,21 +216,6 @@
                 <rect>30,30,60,60</rect>
                 <key>scale9Paddings</key>
                 <rect>30,30,60,60</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">main_character.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>33,32,65,65</rect>
-                <key>scale9Paddings</key>
-                <rect>33,32,65,65</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -248,10 +239,15 @@
         <array>
             <filename>cracked_boulder.png</filename>
             <filename>floor.png</filename>
-            <filename>main_character.png</filename>
             <filename>normal_boulder.png</filename>
             <filename>pit.png</filename>
             <filename>wall.png</filename>
+            <filename>guy_down.png</filename>
+            <filename>guy_left.png</filename>
+            <filename>guy_right.png</filename>
+            <filename>guy_up.png</filename>
+            <filename>pit_with_boulder.png</filename>
+            <filename>pit_with_cracked_boulder.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
