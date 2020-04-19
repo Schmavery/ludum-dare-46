@@ -6,7 +6,7 @@ let editor = ref(true);
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
   let spritesheetLocation = "assets/sprites/spritesheet.png";
-  Env.size(~width=600, ~height=600, env);
+  Env.size(~width=1000, ~height=800, env);
   {
     hooks: Hooks.empty,
     mouse: {
@@ -105,7 +105,7 @@ let getInventoryTopLeft = env => {
   let height = float_of_int(Env.height(env));
   let x = 0.0;
   let backgroundY = height -. toolbarHeight;
-  let xOffset = btnMargin *. 3.0 +. btnSize *. 2.0;
+  let xOffset = btnMargin +. (btnMargin +. btnSize) *. 4.0;
   let yOffset = backgroundY +. btnMargin;
   Point.create(xOffset, yOffset);
 };
@@ -214,7 +214,25 @@ let drawToolbar = (inventory, spriteData, hovered, env) => {
   );
 
   Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  let x = btnMargin *. 2.0 +. btnSize;
+  let x = btnMargin +. (btnMargin +. btnSize) *. 1.;
+  Draw.rectf(
+    ~pos=(x, btnMargin +. backgroundY),
+    ~width=btnSize,
+    ~height=btnSize,
+    env,
+  );
+
+  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
+  let x = btnMargin +. (btnMargin +. btnSize) *. 2.;
+  Draw.rectf(
+    ~pos=(x, btnMargin +. backgroundY),
+    ~width=btnSize,
+    ~height=btnSize,
+    env,
+  );
+
+  Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
+  let x = btnMargin +. (btnMargin +. btnSize) *. 3.;
   Draw.rectf(
     ~pos=(x, btnMargin +. backgroundY),
     ~width=btnSize,

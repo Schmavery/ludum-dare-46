@@ -22,7 +22,7 @@ let editorItemList = [
 let emptyLevel = {
   title: "Tutorial",
   items: editorItemList,
-  map: Serialize.emptyMap(10, 6),
+  map: Serialize.emptyMap(12, 8),
 };
 
 let level1 = {

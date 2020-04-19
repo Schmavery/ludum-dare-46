@@ -1,14 +1,15 @@
 open Reprocessing;
 
 let tileSizef = 50.;
-let toolbarHeight = 180.0;
-let toolbarItemRowLen = 6;
+let toolbarHeight = 90.0;
+let toolbarItemRowLen = 10;
 let btnMargin = 20.0;
 let fontHeight = 50;
 let tickTimeMS = 500.0;
 let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;
-let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
+let btnSize = toolbarHeight -. 2.0 *. btnMargin;
+// let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
 module StringMap = Map.Make(String);
 
