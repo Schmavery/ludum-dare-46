@@ -14,7 +14,7 @@ let setup = (env): Common.state => {
   };
 };
 
-let drawTile = (kind, x, y, env) => {
+let drawTile = (kind, {x, y}: Point.Float.t, env) => {
   switch (kind) {
   | Floor(kind, obj) =>
     switch (kind) {
@@ -71,19 +71,53 @@ let drawTile = (kind, x, y, env) => {
   };
 };
 
-let drawInventoryBackground = env => {
+let getInventoryTopLeft = env => {
+  let height = float_of_int(Env.height(env));
+  let x = 0.0;
+  let backgroundY = height -. Common.toolbarHeight;
+  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0;
+  let yOffset = backgroundY +. Common.btnMargin;
+  Point.create(xOffset, yOffset);
+};
+
+let getHoveredInventoryIndex = (mousePos, env) => {
+  let inventoryTopLeft = getInventoryTopLeft(env);
+  let relativePos = Point.Float.(ofIntPt(mousePos) - inventoryTopLeft);
+  let {x, y}: Point.Int.t =
+    Point.Int.ofFloatPt(
+      Point.Float.(relativePos /@ (Common.tileSizef +. Common.btnMargin)),
+    );
+  x + y * Common.toolbarItemRowLen;
+};
+
+let drawInventory = (inventory, env) => {
+  let topleft = getInventoryTopLeft(env);
+  List.iteri(
+    (i, item) => {
+      let x =
+        float_of_int(i mod Common.toolbarItemRowLen)
+        *. (Common.tileSizef +. Common.btnMargin);
+      let y =
+        (Common.tileSizef +. Common.btnMargin)
+        *. float_of_int(i / Common.toolbarItemRowLen);
+      let relativePos = Point.create(x, y);
+      if (i == getHoveredInventoryIndex(Point.fromPair(Env.mouse(env)), env)) {
+        drawTile(Pit, Point.Float.add(topleft, relativePos), env);
+      } else {
+        drawTile(item, Point.Float.add(topleft, relativePos), env);
+      };
+    },
+    inventory,
+  );
+};
+
+let drawToolbar = (inventory, env) => {
   Draw.fill(Utils.color(~r=210, ~g=210, ~b=230, ~a=255), env);
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
   let x = 0.0;
-  let y = height -. Common.toolbarHeight;
-  Draw.rectf(~pos=(x, y), ~width, ~height, env);
-  y;
-};
-
-let drawInventory = (inventory, env) => {
-  let backgroundY = drawInventoryBackground(env);
-  let btnSize = Common.toolbarHeight /. 2.0 -. 2.0 *. Common.btnMargin;
+  let backgroundY = height -. Common.toolbarHeight;
+  Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
 
   Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
   Draw.rectf(
@@ -102,29 +136,7 @@ let drawInventory = (inventory, env) => {
     env,
   );
 
-  // let width = float_of_int();
-  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0;
-
-  List.iteri(
-    (i, item) => {
-      let x =
-        xOffset
-        +. float_of_int(i mod Common.toolbarItemRowLen)
-        *. (Common.tileSizef +. Common.btnMargin);
-      let y =
-        backgroundY
-        +. (Common.tileSizef +. Common.btnMargin)
-        *. float_of_int(i / Common.toolbarItemRowLen);
-      drawTile(item, x, y, env);
-    },
-    inventory,
-  );
-};
-
-let drawControls = env => {
-  let y = drawInventoryBackground(env);
-  ();
-  // Draw the inventory.
+  drawInventory(inventory, env);
 };
 
 let getLevelTile = (level, {x, y}: Point.Int.t) => {
@@ -289,12 +301,8 @@ let drawMap = (map, env) => {
     (y, row) => {
       List.iteri(
         (x, tile) => {
-          drawTile(
-            tile,
-            float_of_int(x) *. Common.tileSizef,
-            float_of_int(y) *. Common.tileSizef,
-            env,
-          )
+          let p = Point.Int.create(x, y);
+          drawTile(tile, Point.Float.(ofIntPt(p) *@ Common.tileSizef), env);
         },
         row,
       )
@@ -334,7 +342,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, env);
-    drawInventory(levelCurrentState.items, env);
+    drawToolbar(levelCurrentState.items, env);
   | (
       [levelInitialState, ...restOfLevels],
       RunningLevel([levelCurrentState, ...pastLevelStates]),
@@ -372,7 +380,7 @@ let draw = (state, env) => {
       setLastTickTime(lastTickTime^ +. deltaTime);
     };
     drawMap(levelCurrentState.map, env);
-    drawControls(env);
+    drawToolbar([], env); // TODO: Any items?
   | ([nextLevel, ..._], WinLevel(level)) =>
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(nextLevel));

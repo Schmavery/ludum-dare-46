@@ -35,6 +35,7 @@ module Float = {
   let add = ({x: x1, y: y1}, {x: x2, y: y2}) => {x: x1 +. x2, y: y1 +. y2};
   let sub = ({x: x1, y: y1}, {x: x2, y: y2}) => {x: x1 -. x2, y: y1 -. y2};
   let addScalar = ({x, y}, s) => {x: x +. s, y: y +. s};
+  let multScalar = ({x, y}, s) => {x: x *. s, y: y *. s};
   let divScalar = ({x, y}, s) => {x: x /. s, y: y /. s};
   let neg = x => sub(zero, x);
   let mag = ({x, y}) => sqrt(x *. x +. y *. y);
@@ -44,4 +45,5 @@ module Float = {
   let (-) = sub;
   let (/@) = divScalar;
   let (+@) = addScalar;
+  let ( *@ ) = multScalar;
 };

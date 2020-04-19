@@ -4,6 +4,7 @@ let toolbarItemRowLen = 6;
 let btnMargin = 20.0;
 let tickTimeMS = 500.0;
 let loseMsgTimeMS = 1500.0;
+let btnSize = toolbarHeight /. 2.0 -. 2.0 *. btnMargin;
 
 type mouse = {
   down: bool,
@@ -51,6 +52,13 @@ type tick =
   | Win
   | Lose
   | Move(map);
+
+type rect('a) = {
+  top: 'a,
+  left: 'a,
+  width: 'a,
+  height: 'a,
+};
 
 type gameState =
   | Intro
