@@ -460,6 +460,7 @@ let drawLines = (map, mapTopLeft, env) => {
                 None,
                 screenPositions,
               );
+            Draw.noStroke(env);
             ();
           | _ => ()
           }
