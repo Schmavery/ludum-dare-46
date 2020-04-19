@@ -1,7 +1,7 @@
 open Common;
 open Reprocessing;
 
-let setup = (env): Common.state => {
+let setup = (env): state => {
   Env.size(~width=600, ~height=600, env);
   {
     hooks: Hooks.empty,
@@ -24,14 +24,14 @@ let drawTile = (kind, {x, y}: Point.Float.t, env) => {
     };
     Draw.rectf(
       ~pos=(x, y),
-      ~width=Common.tileSizef,
-      ~height=Common.tileSizef,
+      ~width=tileSizef,
+      ~height=tileSizef,
       env,
     );
     switch (obj) {
     | Player(_, _, _) =>
       Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=255), env);
-      let halfTileSize = Common.tileSizef /. 2.;
+      let halfTileSize = tileSizef /. 2.;
       Draw.ellipsef(
         ~center=(x +. halfTileSize, y +. halfTileSize),
         ~radx=halfTileSize,
@@ -43,7 +43,7 @@ let drawTile = (kind, {x, y}: Point.Float.t, env) => {
       | Hard => Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env)
       | Cracked => Draw.fill(Utils.color(~r=100, ~g=50, ~b=50, ~a=255), env)
       };
-      let halfTileSize = Common.tileSizef /. 2.;
+      let halfTileSize = tileSizef /. 2.;
       Draw.ellipsef(
         ~center=(x +. halfTileSize, y +. halfTileSize),
         ~radx=halfTileSize,
@@ -56,16 +56,16 @@ let drawTile = (kind, {x, y}: Point.Float.t, env) => {
     Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=255), env);
     Draw.rectf(
       ~pos=(x, y),
-      ~width=Common.tileSizef,
-      ~height=Common.tileSizef,
+      ~width=tileSizef,
+      ~height=tileSizef,
       env,
     );
   | Wall =>
     Draw.fill(Utils.color(~r=100, ~g=100, ~b=100, ~a=255), env);
     Draw.rectf(
       ~pos=(x, y),
-      ~width=Common.tileSizef,
-      ~height=Common.tileSizef,
+      ~width=tileSizef,
+      ~height=tileSizef,
       env,
     );
   };
@@ -74,9 +74,9 @@ let drawTile = (kind, {x, y}: Point.Float.t, env) => {
 let getInventoryTopLeft = env => {
   let height = float_of_int(Env.height(env));
   let x = 0.0;
-  let backgroundY = height -. Common.toolbarHeight;
-  let xOffset = Common.btnMargin *. 3.0 +. btnSize *. 2.0;
-  let yOffset = backgroundY +. Common.btnMargin;
+  let backgroundY = height -. toolbarHeight;
+  let xOffset = btnMargin *. 3.0 +. btnSize *. 2.0;
+  let yOffset = backgroundY +. btnMargin;
   Point.create(xOffset, yOffset);
 };
 
@@ -85,9 +85,9 @@ let getHoveredInventoryIndex = (mousePos, env) => {
   let relativePos = Point.Float.(ofIntPt(mousePos) - inventoryTopLeft);
   let {x, y}: Point.Int.t =
     Point.Int.ofFloatPt(
-      Point.Float.(relativePos /@ (Common.tileSizef +. Common.btnMargin)),
+      Point.Float.(relativePos /@ (tileSizef +. btnMargin)),
     );
-  x + y * Common.toolbarItemRowLen;
+  x + y * toolbarItemRowLen;
 };
 
 let drawInventory = (inventory, env) => {
@@ -95,11 +95,11 @@ let drawInventory = (inventory, env) => {
   List.iteri(
     (i, item) => {
       let x =
-        float_of_int(i mod Common.toolbarItemRowLen)
-        *. (Common.tileSizef +. Common.btnMargin);
+        float_of_int(i mod toolbarItemRowLen)
+        *. (tileSizef +. btnMargin);
       let y =
-        (Common.tileSizef +. Common.btnMargin)
-        *. float_of_int(i / Common.toolbarItemRowLen);
+        (tileSizef +. btnMargin)
+        *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
       if (i == getHoveredInventoryIndex(Point.fromPair(Env.mouse(env)), env)) {
         drawTile(Pit, Point.Float.add(topleft, relativePos), env);
@@ -116,21 +116,21 @@ let drawToolbar = (inventory, env) => {
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
   let x = 0.0;
-  let backgroundY = height -. Common.toolbarHeight;
+  let backgroundY = height -. toolbarHeight;
   Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
 
   Draw.fill(Utils.color(~r=20, ~g=160, ~b=20, ~a=255), env);
   Draw.rectf(
-    ~pos=(Common.btnMargin, Common.btnMargin +. backgroundY),
+    ~pos=(btnMargin, btnMargin +. backgroundY),
     ~width=btnSize,
     ~height=btnSize,
     env,
   );
 
   Draw.fill(Utils.color(~r=20, ~g=20, ~b=160, ~a=255), env);
-  let x = Common.btnMargin *. 2.0 +. btnSize;
+  let x = btnMargin *. 2.0 +. btnSize;
   Draw.rectf(
-    ~pos=(x, Common.btnMargin +. backgroundY),
+    ~pos=(x, btnMargin +. backgroundY),
     ~width=btnSize,
     ~height=btnSize,
     env,
@@ -296,13 +296,29 @@ let tick = level => {
   );
 };
 
+let drawMessage = (message, env) => {
+  let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
+  Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+  Draw.rectf(
+    ~pos=(0.0, 0.0),
+    ~width=float_of_int(Env.width(env)),
+    ~height=float_of_int(Env.height(env)),
+    env,
+  );
+  Draw.text(
+    ~body=message,
+    ~pos=(20, y),
+    env,
+  );
+}
+
 let drawMap = (map, env) => {
   List.iteri(
     (y, row) => {
       List.iteri(
         (x, tile) => {
           let p = Point.Int.create(x, y);
-          drawTile(tile, Point.Float.(ofIntPt(p) *@ Common.tileSizef), env);
+          drawTile(tile, Point.Float.(ofIntPt(p) *@ tileSizef), env);
         },
         row,
       )
@@ -353,7 +369,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(levelInitialState));
       setLastTickTime(0.0);
     };
-    if (lastTickTime^ > Common.tickTimeMS) {
+    if (lastTickTime^ > tickTimeMS) {
       switch (tick(levelCurrentState.map)) {
       | Move(level) =>
         setLastTickTime(0.0);
@@ -397,19 +413,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(prepLevelState));
     };
     setLoseTimer(loseTimer^ -. deltaTime);
-    let y = (Env.height(env) - int_of_float(toolbarHeight)) / 2;
-    Draw.fill(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
-    Draw.rectf(
-      ~pos=(0.0, 0.0),
-      ~width=float_of_int(Env.width(env)),
-      ~height=float_of_int(Env.height(env)),
-      env,
-    );
-    Draw.text(
-      ~body="Gosh, keep him ALIVE this time will ya?",
-      ~pos=(20, y),
-      env,
-    );
+    drawMessage("Gosh, keep him ALIVE this time will ya?", env)
   };
 
   {
