@@ -22,7 +22,104 @@ let editorItemList = [
 let emptyLevel = {
   title: "Tutorial",
   items: editorItemList,
-  map: Serialize.emptyMap(12, 8),
+  map: Serialize.emptyMap(9, 8),
+};
+
+let boulderWall1 = {
+  title: "Boulder Wall",
+  items: [Floor(Regular, Boulder(id(), Hard))],
+  map: [
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(
+        Regular,
+        Player(
+          id(),
+          Right,
+          [
+            Forward,
+            Forward,
+            Forward,
+            TurnLeft,
+            Forward,
+            Forward,
+            TurnRight,
+            Forward,
+            TurnRight,
+            Forward,
+            Forward,
+            Forward,
+            Forward,
+            Forward,
+          ],
+        ),
+      ),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Wall,
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Pit,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [
+      Wall,
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Floor(Regular, Empty),
+      Wall,
+    ],
+    [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
+  ],
 };
 
 let level1 = {
@@ -121,4 +218,4 @@ let level2 = {
   ],
 };
 
-let all = [level1, level2];
+let all = [boulderWall1];

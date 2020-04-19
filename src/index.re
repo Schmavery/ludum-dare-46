@@ -733,7 +733,7 @@ let draw = (state, env) => {
         | Lose =>
           setGameState(
             LoseLevel(
-              List.nth(pastLevelStates, List.length(pastLevelStates) - 1),
+              List.nth(allLevelStates, List.length(allLevelStates) - 1),
             ),
           );
           setLastTickTime(tickTimeMS);
