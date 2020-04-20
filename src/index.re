@@ -483,7 +483,7 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
   | (_, Floor(k, Player(_) as p)) =>
     Lose(
       setMapTile(level, secondPos, Floor(k, Empty)),
-      [{obj: p, position: secondPos}],
+      [{obj: p, position: secondPos, prevPosition: pos}],
     )
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
     Sound.play("moving_boulder", state, env);
@@ -521,7 +521,7 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
   | (Floor(k, Player(_) as p), Pit) =>
     Lose(
       setMapTile(level, pos, Floor(k, Empty)),
-      [{obj: p, position: secondPos}],
+      [{obj: p, position: secondPos, prevPosition: pos}],
     )
   | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, boulderState)))
       when retrying =>
@@ -615,7 +615,7 @@ let drawMessage =
   let fullWidth = Env.width(env);
 
   Draw.fill(Utils.color(~r=13, ~g=43, ~b=69, ~a=200), env);
-  Draw.rect(~pos=(0, y - 30), ~width=fullWidth, ~height=fontHeight, env);
+  Draw.rect(~pos=(0, 0), ~width=fullWidth, ~height=y + 20, env);
 
   if (withControl != None) {
     Draw.rect(~pos=(0, y), ~width=fullWidth, ~height=fontHeight + 60, env);
@@ -778,6 +778,96 @@ let easeInOutCubic = t =>
   t < 0.5
     ? 4. *. t *. t *. t : (t -. 1.) *. (2. *. t -. 2.) *. (2. *. t -. 2.) +. 1.;
 
+let calculateBounce =
+    (~elapsedTime, ~tickTimeMS, pos: Point.Float.t, prevPos: Point.Float.t) => {
+  let numBounces = 2.;
+  // TODO: There's something we could do here to ease more proportionally.
+  let time = easeInOutQuad(elapsedTime /. tickTimeMS);
+
+  let bounce =
+    Utils.remapf(
+      ~value=time,
+      ~low1=0.,
+      ~high1=1.0,
+      ~low2=0.,
+      ~high2=numBounces *. Constants.pi,
+    );
+
+  // If we're moving in the x position, we need to calculate gravity from a Y perspective
+  let bounceY =
+    if (prevPos.x != pos.x) {
+      sin(bounce) *. 6.;
+    } else if (prevPos.y != pos.y) {
+      sin(bounce) *. 6.;
+    } else {
+      0.;
+    };
+
+  abs_float(bounceY) *. (-1.0);
+};
+
+let drawObjWithAnimation =
+    (
+      ~time,
+      ~tickTimeMS,
+      ~obj,
+      ~scale=1.,
+      pos: Point.Float.t,
+      prevPos: Point.Float.t,
+      state,
+      env,
+    ) => {
+  let elapsedTime = time;
+  let time = easeInOutQuad(time /. tickTimeMS);
+
+  let animatingPosX =
+    Utils.remapf(
+      ~value=time,
+      ~low1=0.,
+      ~high1=1.0,
+      ~low2=prevPos.x,
+      ~high2=pos.x,
+    );
+  let animatingPosY =
+    Utils.remapf(
+      ~value=time,
+      ~low1=0.,
+      ~high1=1.0,
+      ~low2=prevPos.y,
+      ~high2=pos.y,
+    );
+
+  let animatedPosition = Point.Float.create(animatingPosX, animatingPosY);
+  let bounceY =
+    switch (obj) {
+    | Player(_, _, _) =>
+      calculateBounce(~elapsedTime, ~tickTimeMS, pos, prevPos)
+    | _ => 0.
+    };
+
+  let squishY =
+    switch (obj) {
+    | Player(_, _, _) => tileSizef -. bounceY *. (-0.75)
+    | _ => tileSizef
+    };
+  let squishX =
+    switch (obj) {
+    | Player(_, _, _) => tileSizef +. bounceY *. (-0.75)
+    | _ => tileSizef
+    };
+
+  let bouncedPosition = Point.Float.create(0., bounceY);
+
+  drawObj(
+    ~obj,
+    ~pos=Point.Float.(animatedPosition + bouncedPosition),
+    ~spriteData=state.spriteData,
+    ~height=squishY *. scale,
+    ~width=squishX *. scale,
+    env,
+  );
+};
+
 let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) => {
   let topleft = getMapTopLeft(level, env);
   let drawHelper = (x, y, obj) => {
@@ -785,33 +875,7 @@ let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) =
     let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
     drawObj(~obj, ~pos, ~spriteData=state.spriteData, env);
   };
-  let calculateBounce =
-      (elapsedTime, pos: Point.Float.t, prevPos: Point.Float.t) => {
-    let numBounces = 2.;
-    // TODO: There's something we could do here to ease more proportionally.
-    let time = easeInOutQuad(elapsedTime /. tickTimeMS);
 
-    let bounce =
-      Utils.remapf(
-        ~value=time,
-        ~low1=0.,
-        ~high1=1.0,
-        ~low2=0.,
-        ~high2=numBounces *. Constants.pi,
-      );
-
-    // If we're moving in the x position, we need to calculate gravity from a Y perspective
-    let bounceY =
-      if (prevPos.x != pos.x) {
-        sin(bounce) *. 6.;
-      } else if (prevPos.y != pos.y) {
-        sin(bounce) *. 6.;
-      } else {
-        0.;
-      };
-
-    abs_float(bounceY) *. (-1.0);
-  };
   switch (previousLevel) {
   | None =>
     List.iteri(
@@ -849,56 +913,13 @@ let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) =
                 let prevP = Point.Int.create(x, y);
                 let prevPos =
                   Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
-                let elapsedTime = time;
-                let time = easeInOutQuad(time /. tickTimeMS);
-
-                let animatingPosX =
-                  Utils.remapf(
-                    ~value=time,
-                    ~low1=0.,
-                    ~high1=1.0,
-                    ~low2=prevPos.x,
-                    ~high2=pos.x,
-                  );
-                let animatingPosY =
-                  Utils.remapf(
-                    ~value=time,
-                    ~low1=0.,
-                    ~high1=1.0,
-                    ~low2=prevPos.y,
-                    ~high2=pos.y,
-                  );
-
-                let animatedPosition =
-                  Point.Float.create(animatingPosX, animatingPosY);
-                let bounceY =
-                  switch (tile) {
-                  | Floor(_, Player(_, _, _)) =>
-                    calculateBounce(elapsedTime, pos, prevPos)
-                  | _ => 0.
-                  };
-
-                let squishY =
-                  switch (tile) {
-                  | Floor(_, Player(_, _, _)) =>
-                    tileSizef -. bounceY *. (-0.75)
-                  | _ => tileSizef
-                  };
-                let squishX =
-                  switch (tile) {
-                  | Floor(_, Player(_, _, _)) =>
-                    tileSizef +. bounceY *. (-0.75)
-                  | _ => tileSizef
-                  };
-
-                let bouncedPosition = Point.Float.create(0., bounceY);
-
-                drawObj(
+                drawObjWithAnimation(
+                  ~time,
+                  ~tickTimeMS,
                   ~obj,
-                  ~pos=Point.Float.(animatedPosition + bouncedPosition),
-                  ~spriteData=state.spriteData,
-                  ~height=squishY,
-                  ~width=squishX,
+                  pos,
+                  prevPos,
+                  state,
                   env,
                 );
                 ();
@@ -973,7 +994,8 @@ let draw = (state, env) => {
   let undoButtonRect = getUndoRect(env);
   let (undoClicked, undoButtonDown) =
     getClickOn(undoButtonRect, mousePtf, undoButtonState, env);
-  let undoClicked = undoClicked || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
+  let undoClicked =
+    undoClicked || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
 
   let (lossCounter, setLossCounter) = Hooks.useState(__LOC__, 0);
 
@@ -985,6 +1007,10 @@ let draw = (state, env) => {
 
   let (totalTime, setTotalTime) = Hooks.useState(__LOC__, 0.);
   setTotalTime(mod_float(totalTime^ +. Env.deltaTime(env), 10000000.));
+
+  if (restartClicked) {
+    setLastTickTime(tickTimeMS +. 1.);
+  };
 
   if (Env.keyPressed(T, env)) {
     setLevels(Levels.all);
@@ -1245,38 +1271,41 @@ let draw = (state, env) => {
           setGameState(
             LoseLevel({
               deadList,
-              loseState: levelCurrentState,
+              loseState: {
+                ...levelCurrentState,
+                map: level,
+              },
               preparingUndoStack,
             }),
           );
-          setLastTickTime(tickTimeMS +. 1.);
+
+          // Set to 0 to make sure the death animation can play for a tick
+          setLastTickTime(0.);
           (pastLevelStates, levelCurrentState);
         };
       } else {
         setLastTickTime(lastTickTime^ +. deltaTime);
         (pastLevelStates, levelCurrentState);
       };
-    switch (List.nth_opt(pastLevelStates, 0)) {
-    | None =>
-      failwith(
-        "There was only one level in the stack of levels, should not happen",
-      ) // WEIRD
-    | Some(pastLevel) =>
-      drawMap(pastLevel.map, state.spriteData, ~time=totalTime^, env);
-      if (lastTickTime^ /. tickTimeMS < 0.5) {
-        drawLines(pastLevel.map, env);
-      } else {
-        drawLines(levelCurrentState.map, env);
+    let pastLevel =
+      switch (List.nth_opt(pastLevelStates, 0)) {
+      | None => levelCurrentState
+      | Some(pastLevel) => pastLevel
       };
-      drawObjects(
-        ~previousLevel=pastLevel,
-        ~tickTimeMS,
-        ~time=lastTickTime^,
-        levelCurrentState.map,
-        state,
-        env,
-      );
+    drawMap(pastLevel.map, state.spriteData, ~time=totalTime^, env);
+    if (lastTickTime^ /. tickTimeMS < 0.5) {
+      drawLines(pastLevel.map, env);
+    } else {
+      drawLines(levelCurrentState.map, env);
     };
+    drawObjects(
+      ~previousLevel=pastLevel,
+      ~tickTimeMS,
+      ~time=lastTickTime^,
+      levelCurrentState.map,
+      state,
+      env,
+    );
     drawMessage(levelCurrentState.title, state.font, env);
     drawToolbar(
       [],
@@ -1324,11 +1353,48 @@ let draw = (state, env) => {
     );
   | (
       [initialLevel, ..._],
-      LoseLevel({loseState, preparingUndoStack: prepLevelState}),
+      LoseLevel({loseState, preparingUndoStack: prepLevelState, deadList}),
     ) =>
     drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(loseState.map, env);
     drawObjects(loseState.map, state, ~tickTimeMS, env);
+
+    let deltaTime = Env.deltaTime(env) *. 1000.0;
+    if (lastTickTime^ < tickTimeMS) {
+      setLastTickTime(lastTickTime^ +. deltaTime);
+    };
+
+    let drawAnimatingDead = (deadList, level, env) => {
+      let topleft = getMapTopLeft(level.map, env);
+
+      List.iter(
+        deadThing => {
+          switch (deadThing.obj) {
+          | Player(id, _, _) as obj =>
+            let p = deadThing.position;
+            let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
+            let prevP = deadThing.prevPosition;
+            let prevPos = Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
+            let time = lastTickTime^ /. tickTimeMS;
+            let scale = Utils.lerpf(~low=1.0, ~high=0.6, ~value=time);
+            drawObjWithAnimation(
+              ~time=lastTickTime^,
+              ~tickTimeMS,
+              ~obj,
+              ~scale,
+              pos,
+              prevPos,
+              state,
+              env,
+            );
+          | _ => ()
+          }
+        },
+        deadList,
+      );
+    };
+    drawAnimatingDead(deadList, loseState, env);
+
     drawToolbar(
       [],
       state.spriteData,
@@ -1339,7 +1405,6 @@ let draw = (state, env) => {
       ~time=totalTime^,
       env,
     );
-    let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (playClicked || restartClicked) {
       setGameState(PreparingLevel(prepLevelState));
     };

@@ -85,6 +85,7 @@ type level = {
 };
 type deathInfo = {
   obj,
+  prevPosition: Point.Int.t,
   position: Point.Int.t,
 };
 type tick =
