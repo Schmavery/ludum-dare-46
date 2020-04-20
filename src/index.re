@@ -539,7 +539,8 @@ let drawMessage =
   Draw.noTint(env);
 };
 
-let drawLines = (map, mapTopLeft, env) => {
+let drawLines = (map, env) => {
+  let mapTopLeft = getMapTopLeft(map, env);
   let halfTileSize = tileSizef /. 2.;
   let centerOffset = Point.create(halfTileSize, halfTileSize);
 
@@ -632,7 +633,6 @@ let drawMap = (map, spriteData, ~time, env) => {
     },
     map,
   );
-  drawLines(map, topleft, env);
 };
 
 let findInMap = (level, withId) => {
@@ -1000,6 +1000,7 @@ let draw = (state, env) => {
       setGameState(RunningLevel([levelCurrentState]));
     };
     drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
+    drawLines(levelCurrentState.map, env);
     drawObjects(levelCurrentState.map, state.spriteData, env);
     drawToolbar(
       levelCurrentState.items,
@@ -1079,6 +1080,11 @@ let draw = (state, env) => {
       ) // WEIRD
     | Some(pastLevel) =>
       drawMap(pastLevel.map, state.spriteData, ~time=totalTime^, env);
+      if (lastTickTime^ /. tickTimeMS < 0.5) {
+        drawLines(pastLevel.map, env);
+      } else {
+        drawLines(levelCurrentState.map, env);
+      };
       drawObjects(
         ~previousLevel=pastLevel,
         ~time=lastTickTime^,
@@ -1098,6 +1104,7 @@ let draw = (state, env) => {
     };
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, ~time=totalTime^, env);
+    drawLines(level.map, env);
     drawObjects(level.map, state.spriteData, env);
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
@@ -1113,6 +1120,7 @@ let draw = (state, env) => {
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
     drawMap(prepLevelState.map, state.spriteData, ~time=totalTime^, env);
+    drawLines(prepLevelState.map, env);
     drawObjects(prepLevelState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
