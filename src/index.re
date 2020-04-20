@@ -6,7 +6,7 @@ let editor = ref(false);
 let setup = (spriteData, env): Common.state => {
   let fontPath = "assets/font/ptsans_regular_2x.fnt";
   let spritesheetLocation = "assets/sprites/spritesheet.png";
-  Env.size(~width=1000, ~height=800, env);
+  Env.size(~width=1000, ~height=790, env);
   {
     hooks: Hooks.empty,
     mouse: {
