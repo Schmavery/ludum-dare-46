@@ -271,7 +271,7 @@ let getHoveredInventoryIndex = (items, env) => {
   };
 };
 
-let drawInventory = (inventory, spriteData, hovered, ~time, env) => {
+let drawInventory = (inventory, spriteData, ~dragging, ~hovered, ~time, env) => {
   let topleft = getInventoryTopLeft(env);
   List.iteri(
     (i, item) => {
@@ -279,8 +279,15 @@ let drawInventory = (inventory, spriteData, hovered, ~time, env) => {
         float_of_int(i mod toolbarItemRowLen) *. (tileSizef +. btnMargin);
       let y = (tileSizef +. btnMargin) *. float_of_int(i / toolbarItemRowLen);
       let relativePos = Point.create(x, y);
-      if (Some(i) == hovered) {
+      Draw.pushStyle(env);
+      if (Some(i) == dragging) {
         Draw.tint(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+      } else if (Some(i) == hovered) {
+        let highlight = 300;
+        Draw.tint(
+          Utils.color(~r=highlight, ~g=highlight, ~b=highlight, ~a=255),
+          env,
+        );
       };
       drawTile(
         item,
@@ -291,9 +298,7 @@ let drawInventory = (inventory, spriteData, hovered, ~time, env) => {
         spriteData,
         env,
       );
-      if (Some(i) == hovered) {
-        Draw.noTint(env);
-      };
+      Draw.popStyle(env);
     },
     inventory,
   );
@@ -352,7 +357,8 @@ let drawToolbar =
       ~inPreparingLevel=false,
       ~allButtonStates,
       spriteData,
-      hovered,
+      ~hovered,
+      ~dragging,
       ~time,
       env,
     ) => {
@@ -427,7 +433,7 @@ let drawToolbar =
 
   Draw.popStyle(env);
 
-  drawInventory(inventory, spriteData, hovered, ~time, env);
+  drawInventory(inventory, spriteData, ~dragging, ~hovered, ~time, env);
 };
 
 let facingToDelta = facing =>
@@ -1152,7 +1158,8 @@ let draw = (state, env) => {
       ~inPreparingLevel=true,
       ~allButtonStates,
       state.spriteData,
-      Option.map(fst, dragging^),
+      ~dragging=Option.map(fst, dragging^),
+      ~hovered=Option.map(fst, hoveredItem),
       ~time=totalTime^,
       env,
     );
@@ -1274,7 +1281,8 @@ let draw = (state, env) => {
     drawToolbar(
       [],
       state.spriteData,
-      None,
+      ~dragging=None,
+      ~hovered=None,
       ~accelerateTime=accelerating,
       ~canAccelerate=true,
       ~allButtonStates,
@@ -1293,7 +1301,8 @@ let draw = (state, env) => {
     drawToolbar(
       [],
       state.spriteData,
-      None,
+      ~dragging=None,
+      ~hovered=None,
       ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
@@ -1323,7 +1332,8 @@ let draw = (state, env) => {
     drawToolbar(
       [],
       state.spriteData,
-      None,
+      ~dragging=None,
+      ~hovered=None,
       ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
