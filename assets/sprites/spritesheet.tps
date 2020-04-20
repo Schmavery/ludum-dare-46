@@ -199,9 +199,13 @@
                 <false/>
             </struct>
             <key type="filename">accelerate_disabled.png</key>
+            <key type="filename">accelerate_hovered.png</key>
             <key type="filename">accelerate_pressed.png</key>
+            <key type="filename">back_hovered.png</key>
             <key type="filename">play_disabled.png</key>
+            <key type="filename">play_hovered.png</key>
             <key type="filename">play_pressed.png</key>
+            <key type="filename">undo_hovered.png</key>
             <key type="filename">undo_pressed.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -328,6 +332,10 @@
             <filename>back_disabled.png</filename>
             <filename>play_disabled.png</filename>
             <filename>rotator.png</filename>
+            <filename>accelerate_hovered.png</filename>
+            <filename>back_hovered.png</filename>
+            <filename>play_hovered.png</filename>
+            <filename>undo_hovered.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
