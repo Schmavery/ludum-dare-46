@@ -6,10 +6,17 @@ let spinnerDirection = d =>
   | CCW => "CCW"
   };
 
+let boulderHealth = health => {
+  switch (health) {
+  | Cracked => "Cracked"
+  | Hard => "Hard"
+  };
+};
+
 let floorKind = fKind => {
   switch (fKind) {
   | Regular => "Regular"
-  | FilledPit(_) => "FilledPit(id())"
+  | FilledPit(_, h) => "FilledPit(id(), " ++ boulderHealth(h) ++ ")"
   | Spinner(dir) => "Spinner(" ++ spinnerDirection(dir) ++ ")"
   };
 };
@@ -24,13 +31,6 @@ let move = m => {
 
 let moves = mList => {
   "[" ++ String.concat(",", List.map(m => {move(m)}, mList)) ++ "]";
-};
-
-let boulderHealth = health => {
-  switch (health) {
-  | Cracked => "Cracked"
-  | Hard => "Hard"
-  };
 };
 
 let facing = f => {

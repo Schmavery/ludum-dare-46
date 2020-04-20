@@ -97,11 +97,22 @@ let drawTile =
           env,
         );
       }
-    | FilledPit(_) =>
+    | FilledPit(_, Hard) =>
       if (background) {
         Assets.drawSprite(
           spriteData,
           "pit_with_boulder",
+          ~pos,
+          ~width=tileSizef,
+          ~height=tileSizef,
+          env,
+        );
+      }
+    | FilledPit(_, Cracked) =>
+      if (background) {
+        Assets.drawSprite(
+          spriteData,
+          "pit_with_cracked_boulder",
           ~pos,
           ~width=tileSizef,
           ~height=tileSizef,
@@ -438,7 +449,11 @@ let rec resolveMove = (level, pos, moveDelta, retrying) => {
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
     replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
   | (Floor(k1, Boulder(id, health)), Pit) =>
-    replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
+    replaceWith(
+      level,
+      Floor(k1, Empty),
+      Floor(FilledPit(id, health), Empty),
+    )
   | (Floor(k, Player(id, facing, moves)), Floor(Spinner(dir), Empty)) =>
     let move = dir == CW ? TurnRight : TurnLeft;
     replaceWith(
@@ -687,7 +702,7 @@ let findInMap = (level, withId) => {
       List.iteri(
         (x, tile) => {
           switch (tile) {
-          | Floor(FilledPit(id), _) when id == withId =>
+          | Floor(FilledPit(id, _), _) when id == withId =>
             cur := Some((Point.create(x, y), None))
           | Floor(_, Boulder(id, _) as obj)
           | Floor(_, Player(id, _, _) as obj) when id === withId =>

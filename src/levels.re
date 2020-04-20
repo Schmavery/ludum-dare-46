@@ -13,7 +13,7 @@ let editorItemList = [
   Floor(Regular, Boulder(id(), Hard)),
   Floor(Regular, Boulder(id(), Cracked)),
   Floor(Regular, Player(id(), Down, [Forward, Forward])),
-  Floor(FilledPit(id()), Empty), // We don't need filled pit
+  Floor(FilledPit(id(), Hard), Empty), // We don't need filled pit
   Wall,
   Pit,
   Floor(Spinner(CW), Empty),
