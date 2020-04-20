@@ -611,6 +611,10 @@ let drawMessage =
   Draw.fill(Utils.color(~r=13, ~g=43, ~b=69, ~a=200), env);
   Draw.rect(~pos=(x, y - 30), ~width=fullWidth, ~height=fontHeight, env);
 
+  if (withControl != None) {
+    Draw.rect(~pos=(x, y), ~width=fullWidth, ~height=fontHeight + 60, env);
+  };
+
   Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
   Draw.text(~font, ~body=message, ~pos=(x, y), env);
 
@@ -621,7 +625,6 @@ let drawMessage =
     let rect = getPlayRect(env);
     let x2 = (Env.width(env) - textWidth2) / 2;
     let y2 = y + fontHeight + 24;
-    Draw.rect(~pos=(x, y), ~width=fullWidth, ~height=fontHeight + 60, env);
     Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
     Draw.text(~font, ~body, ~pos=(x2, y2), env);
 

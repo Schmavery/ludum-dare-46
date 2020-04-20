@@ -21,13 +21,13 @@ let editorItemList = [
 ];
 
 let emptyLevel = {
-  title: "Tutorial",
+  title: "Editor",
   items: editorItemList,
-  map: Serialize.emptyMap(7, 7),
+  map: Serialize.emptyMap(11, 11),
 };
 
 let boulderPitTutorial = {
-  title: "Tutorial",
+  title: "Pretty Simple",
   items: [],
   map: [
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
@@ -72,7 +72,7 @@ let boulderPitTutorial = {
 };
 
 let placeBoulderTutorial = {
-  title: "Place Boulder Tutorial",
+  title: "Just Drag a Boulder",
   items: [Floor(Regular, Boulder(id(), Hard))],
   map: [
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
