@@ -874,11 +874,11 @@ let draw = (state, env) => {
   | ([first, ...rest], Intro) =>
     drawMessage("Welcome", state.font, ~withControlHelp="press SPACE", env);
     if (Env.keyPressed(Space, env)) {
-      setGameState(PreparingLevel(first));
+      setGameState(PreparingLevel([first]));
     };
   | (
       [levelInitialState, ...restOfLevels],
-      PreparingLevel(levelCurrentState),
+      PreparingLevel([levelCurrentState, ...undoStates]),
     ) =>
     let (dragging, setDragging) = Hooks.useState(__LOC__, None);
 
@@ -957,7 +957,7 @@ let draw = (state, env) => {
         levelCurrentState;
       };
 
-    let levelCurrentState =
+    let maybeUpdatedLevel =
       switch (hoveredItem, hoveredMapSquare, dragging^) {
       | (None, _, None) => levelCurrentState
       | (Some(v), _, None) when state.mouse.down =>
@@ -991,13 +991,30 @@ let draw = (state, env) => {
         levelCurrentState;
       };
 
-    setGameState(PreparingLevel(levelCurrentState));
+    let (levelCurrentState, undoStates) =
+      if (maybeUpdatedLevel != levelCurrentState) {
+        (maybeUpdatedLevel, [levelCurrentState, ...undoStates]);
+      } else if (Env.keyPressed(U, env)) {
+        switch (undoStates) {
+        | [] => (levelCurrentState, [])
+        | [undoState, ...undoStates] => (undoState, undoStates)
+        };
+      } else {
+        (levelCurrentState, undoStates);
+      };
+
+    setGameState(PreparingLevel([levelCurrentState, ...undoStates]));
 
     if (restartClicked) {
-      setGameState(PreparingLevel(levelInitialState));
+      setGameState(PreparingLevel([levelInitialState]));
     };
     if (playClicked) {
-      setGameState(RunningLevel([levelCurrentState]));
+      setGameState(
+        RunningLevel({
+          states: [levelCurrentState],
+          preparingUndoStack: [levelCurrentState, ...undoStates],
+        }),
+      );
     };
     drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(levelCurrentState.map, env);
@@ -1023,13 +1040,14 @@ let draw = (state, env) => {
         ),
       dragging^,
     );
-  | ([levelInitialState, ...restOfLevels], RunningLevel([])) =>
+  | ([levelInitialState, ...restOfLevels], RunningLevel({states: []})) =>
     failwith("This should not happen, RunningLevel got an empty list.")
   | (
       [levelInitialState, ...restOfLevels],
-      RunningLevel(
-        [levelCurrentState, ...pastLevelStates] as allLevelStates,
-      ),
+      RunningLevel({
+        states: [levelCurrentState, ...pastLevelStates],
+        preparingUndoStack,
+      }),
     ) =>
     let deltaTime = Env.deltaTime(env) *. 1000.0;
 
@@ -1040,20 +1058,15 @@ let draw = (state, env) => {
           setLastTickTime(0.0);
           let newLevelState = {...levelCurrentState, map: level};
           setGameState(
-            RunningLevel([
-              newLevelState,
-              levelCurrentState,
-              ...pastLevelStates,
-            ]),
+            RunningLevel({
+              states: [newLevelState, levelCurrentState, ...pastLevelStates],
+              preparingUndoStack,
+            }),
           );
           ([levelCurrentState, ...pastLevelStates], newLevelState);
         | Win =>
           if (editor^) {
-            setGameState(
-              PreparingLevel(
-                List.nth(allLevelStates, List.length(allLevelStates) - 1),
-              ),
-            );
+            setGameState(PreparingLevel(preparingUndoStack));
           } else {
             setLevels(restOfLevels);
             setGameState(WinLevel(levelCurrentState));
@@ -1062,10 +1075,7 @@ let draw = (state, env) => {
           (pastLevelStates, levelCurrentState);
         | Lose =>
           setGameState(
-            LoseLevel(
-              levelCurrentState,
-              List.nth(allLevelStates, List.length(allLevelStates) - 1),
-            ),
+            LoseLevel({loseState: levelCurrentState, preparingUndoStack}),
           );
           setLastTickTime(tickTimeMS +. 1.);
           (pastLevelStates, levelCurrentState);
@@ -1096,11 +1106,7 @@ let draw = (state, env) => {
     };
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env); // TODO: Any items?
     if (restartClicked) {
-      setGameState(
-        PreparingLevel(
-          List.nth(allLevelStates, List.length(allLevelStates) - 1),
-        ),
-      );
+      setGameState(PreparingLevel(preparingUndoStack));
       setLastTickTime(tickTimeMS +. 1.);
     };
   | ([nextLevel, ..._], WinLevel(level)) =>
@@ -1110,7 +1116,7 @@ let draw = (state, env) => {
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(Space, env)) {
-      setGameState(PreparingLevel(nextLevel));
+      setGameState(PreparingLevel([nextLevel]));
     };
 
     drawMessage(
@@ -1119,7 +1125,10 @@ let draw = (state, env) => {
       state.font,
       env,
     );
-  | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
+  | (
+      [initialLevel, ..._],
+      LoseLevel({loseState, preparingUndoStack: prepLevelState}),
+    ) =>
     drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(loseState.map, env);
     drawObjects(loseState.map, state.spriteData, env);

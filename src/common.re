@@ -119,9 +119,15 @@ module Rect = {
 type gameState =
   | Intro
   | WinLevel(level)
-  | LoseLevel(level, level)
-  | RunningLevel(list(level))
-  | PreparingLevel(level);
+  | LoseLevel({
+      loseState: level,
+      preparingUndoStack: list(level),
+    })
+  | RunningLevel({
+      states: list(level),
+      preparingUndoStack: list(level),
+    })
+  | PreparingLevel(list(level));
 
 module Option = {
   type t('a) = option('a);
