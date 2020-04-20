@@ -119,7 +119,7 @@ module Rect = {
 type gameState =
   | Intro
   | WinLevel(level)
-  | LoseLevel(level)
+  | LoseLevel(level, level)
   | RunningLevel(list(level))
   | PreparingLevel(level);
 

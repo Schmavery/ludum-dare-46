@@ -1063,6 +1063,7 @@ let draw = (state, env) => {
         | Lose =>
           setGameState(
             LoseLevel(
+              levelCurrentState,
               List.nth(allLevelStates, List.length(allLevelStates) - 1),
             ),
           );
@@ -1119,9 +1120,9 @@ let draw = (state, env) => {
       env,
     );
   | ([initialLevel, ..._], LoseLevel(prepLevelState)) =>
-    drawMap(prepLevelState.map, state.spriteData, ~time=totalTime^, env);
-    drawLines(prepLevelState.map, env);
-    drawObjects(prepLevelState.map, state.spriteData, env);
+    drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
+    drawLines(loseState.map, env);
+    drawObjects(loseState.map, state.spriteData, env);
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(Space, env)) {
