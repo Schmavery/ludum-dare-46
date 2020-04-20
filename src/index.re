@@ -1052,7 +1052,7 @@ let draw = (state, env) => {
     let (levelCurrentState, undoStates) =
       if (maybeUpdatedLevel != levelCurrentState) {
         (maybeUpdatedLevel, [levelCurrentState, ...undoStates]);
-      } else if (Env.keyPressed(U, env)) {
+      } else if (undoClicked) {
         switch (undoStates) {
         | [] => (levelCurrentState, [])
         | [undoState, ...undoStates] => (undoState, undoStates)
