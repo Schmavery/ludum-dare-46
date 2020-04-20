@@ -1263,7 +1263,7 @@ let draw = (state, env) => {
     ) =>
     drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
     drawObjects(loseState.map, state, env);
-    drawObjects(loseState.map, state.spriteData, env);
+    drawObjects(loseState.map, state, env);
     drawToolbar([], state.spriteData, None, ~allButtonStates,
       ~inPreparingLevel=false, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
