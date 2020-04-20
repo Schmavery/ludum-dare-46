@@ -464,10 +464,12 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
     Move(setMapTile(setMapTile(level, pos, t1), secondPos, t2));
 
   let retryResolveMove = level =>
-    !retrying ? resolveMove(level, pos, moveDelta, true, state, env) : Move(level);
+    !retrying
+      ? resolveMove(level, pos, moveDelta, true, state, env) : Move(level);
 
   let resolveMove = (level, pos, moveDelta) =>
-    !retrying ? resolveMove(level, pos, moveDelta, false, state, env) : Move(level);
+    !retrying
+      ? resolveMove(level, pos, moveDelta, false, state, env) : Move(level);
 
   switch (getMapTile(level, pos), getMapTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
@@ -475,14 +477,14 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
   | (_, Floor(_, Player(_))) => Lose
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
     Sound.play("moving_boulder", state, env);
-    replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
+    replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)));
   | (Floor(k1, Boulder(id, health)), Pit) =>
     Sound.play("moving_boulder", state, env);
     replaceWith(
       level,
       Floor(k1, Empty),
       Floor(FilledPit(id, health), Empty),
-    )
+    );
   | (Floor(k, Player(id, facing, moves)), Floor(Spinner(dir), Empty)) =>
     let move = dir == CW ? TurnRight : TurnLeft;
     replaceWith(
@@ -511,7 +513,7 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
       when retrying =>
     let obj = boulderState == Hard ? Boulder(id, Cracked) : Empty;
     Sound.play("rock_crack", state, env);
-    replaceWith(level, Floor(k1, p), Floor(k2, obj))
+    replaceWith(level, Floor(k1, p), Floor(k2, obj));
   | (Floor(k1, Player(_) | Boulder(_, _)), Floor(k2, Boulder(_))) =>
     switch (resolveMove(level, secondPos, moveDelta)) {
     | Move(level) => retryResolveMove(level)
@@ -748,8 +750,7 @@ let easeInOutCubic = t =>
   t < 0.5
     ? 4. *. t *. t *. t : (t -. 1.) *. (2. *. t -. 2.) *. (2. *. t -. 2.) +. 1.;
 
-let drawObjects =
-    (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) => {
+let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) => {
   let topleft = getMapTopLeft(level, env);
   let drawHelper = (x, y, obj) => {
     let p = Point.Int.create(x, y);
@@ -1164,7 +1165,7 @@ let draw = (state, env) => {
   | ([levelInitialState, ...restOfLevels], RunningLevel({states: []})) =>
     failwith("This should not happen, RunningLevel got an empty list.")
   | (
-      [levelInitialState, ...restOfLevels],
+      [levelInitialState, ...restOfLevels] as allLevels,
       RunningLevel({
         states: [levelCurrentState, ...pastLevelStates],
         preparingUndoStack,
@@ -1197,7 +1198,7 @@ let draw = (state, env) => {
           } else {
             Sound.play("win", state, env);
             setLevels(restOfLevels);
-            setGameState(WinLevel(levelCurrentState));
+            setGameState(WinLevel(levelInitialState, levelCurrentState));
           };
           setLastTickTime(tickTimeMS +. 1.);
           (pastLevelStates, levelCurrentState);
@@ -1249,7 +1250,7 @@ let draw = (state, env) => {
       setGameState(PreparingLevel(preparingUndoStack));
       setLastTickTime(tickTimeMS +. 1.);
     };
-  | ([nextLevel, ..._], WinLevel(level)) =>
+  | ([nextLevel, ...restLevels], WinLevel(wonLevel, level)) =>
     drawMap(level.map, state.spriteData, ~time=totalTime^, env);
     drawLines(level.map, env);
     drawObjects(level.map, state, ~tickTimeMS, env);
@@ -1265,6 +1266,9 @@ let draw = (state, env) => {
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (playClicked) {
       setGameState(PreparingLevel([nextLevel]));
+    } else if (restartClicked) {
+      setLevels([wonLevel, nextLevel, ...restLevels]);
+      setGameState(PreparingLevel([wonLevel]));
     };
     drawMessage(
       "That's how it's done!",
