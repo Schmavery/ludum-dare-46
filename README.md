@@ -1,28 +1,24 @@
-Reprocessing Example
+Death Trap II: Revenge of the Walls
+---
+This is a game made for [Ludum Dare 46](https://ldjam.com/events/ludum-dare/46). The theme was "Keep it alive". 
+
+Play now!
 ---
 
-Clone this repo to get started with [Reprocessing](https://github.com/schmavery/reprocessing).
+Click here to play: 
+https://schmavery.github.io/ludum-dare-46/
 
-Demos are on other branches:
+More Info
+---
+This game was build using [Reprocessing](https://github.com/schmavery/reprocessing), a 2D graphics library we wrote in ReasonML/OCaml, with an api inspired by Processing.
 
-- [Flappy Bird](https://github.com/bsansouci/reprocessing-example/tree/livestream-flappybird)
-- [2048](https://github.com/bsansouci/reprocessing-example/tree/2048)
+See [here](https://github.com/schmavery/reprocessing#projects-using-reprocessing) for more examples of games and demos built in Reprocessing.
 
-...and more on the [Reprocessing repo](https://github.com/schmavery/reprocessing#projects-using-reprocessing).
-
-## How to
-```
-git clone https://github.com/bsansouci/reprocessing-example.git
-```
-
-### Install
-
-```
-npm install
-```
 
 ### Build
 ```
+git clone https://github.com/Schmavery/ludum-dare-46.git
+npm install
 npm run build
 ```
 
@@ -31,7 +27,7 @@ npm run build
 npm start
 ```
 
-To build to JS run `npm run build:web` and then run a static server, like `python -m SimpleHTTPServer` and go to `localhost:8000`. If you're using safari you can simply open the `index.html` and tick `Develop > Disable Cross-Origin Restrictions`.
+To build to JS run `npm run build:web` and then run a static server (like `python -m SimpleHTTPServer`) and go to `localhost:8000`. If you're using safari you can simply open the `index.html` and tick `Develop > Disable Cross-Origin Restrictions`.
 
 To build to native run `npm run build:native` and run `npm run start:native`
 
