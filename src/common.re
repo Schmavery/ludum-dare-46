@@ -5,6 +5,7 @@ let toolbarHeight = 110.0;
 let toolbarItemRowLen = 10;
 let btnMargin = 20.0;
 let fontHeight = 50;
+let accelerateMult = 2.;
 let tickTimeMS = 600.0;
 let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;

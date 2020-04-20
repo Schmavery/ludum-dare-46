@@ -345,6 +345,7 @@ let drawToolbar =
     (
       inventory,
       ~accelerateTime=false,
+      ~canAccelerate=false,
       ~inPreparingLevel=false,
       ~allButtonStates,
       spriteData,
@@ -389,7 +390,12 @@ let drawToolbar =
   );
 
   let rect = getPlayRect(env);
-  let playOrAcceleate = if (accelerateTime) {"accelerate"} else {"play"};
+  let playOrAcceleate =
+    if (accelerateTime || !canAccelerate) {
+      "play";
+    } else {
+      "accelerate";
+    };
   Assets.drawSprite(
     spriteData,
     playOrAcceleate ++ pressed(allButtonStates.play),
@@ -570,15 +576,7 @@ let tick = (level, state, env) => {
 };
 
 let drawMessage =
-    (
-      message,
-      font,
-      ~offset=0,
-      ~withControl=?,
-      ~time=0.,
-      ~spriteData=?,
-      env,
-    ) => {
+    (message, font, ~offset=0, ~withControl=?, ~time=0., ~spriteData=?, env) => {
   let y = (180 + offset - fontHeight) / 2;
   {
     let textWidth = Draw.textWidth(~font, ~body=message, env);
@@ -600,11 +598,7 @@ let drawMessage =
     Assets.drawSprite(
       spriteData,
       assetName,
-      ~pos=
-        Point.create(
-          x->float_of_int +. 166.,
-          y->float_of_int -. 12.,
-        ),
+      ~pos=Point.create(x->float_of_int +. 166., y->float_of_int -. 12.),
       ~width=rect.width,
       ~height=rect.height,
       env,
@@ -741,7 +735,8 @@ let easeInOutCubic = t =>
   t < 0.5
     ? 4. *. t *. t *. t : (t -. 1.) *. (2. *. t -. 2.) *. (2. *. t -. 2.) +. 1.;
 
-let drawObjects = (~previousLevel=?, ~time=0., level, state, env) => {
+let drawObjects =
+    (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) => {
   let topleft = getMapTopLeft(level, env);
   let drawHelper = (x, y, obj) => {
     let p = Point.Int.create(x, y);
@@ -901,8 +896,6 @@ let draw = (state, env) => {
   let (lastTickTime, setLastTickTime) =
     Hooks.useState(__LOC__, tickTimeMS +. 1.);
 
-  let accelerateTime = false;
-
   let mousePtf = Point.(Float.ofIntPt(fromPair(Env.mouse(env))));
 
   let undo =
@@ -926,6 +919,8 @@ let draw = (state, env) => {
   let (playClicked, playButtonDown) =
     getClickOn(playButtonRect, mousePtf, playButtonState, env);
   let playClicked = playClicked || Env.keyPressed(Space, env);
+  let (lastAccelerating, setLastAccelerating) =
+    Hooks.useState(__LOC__, false);
 
   let undoButtonState = Hooks.useState(__LOC__, false);
   let undoButtonRect = getUndoRect(env);
@@ -1107,10 +1102,9 @@ let draw = (state, env) => {
     };
     drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(levelCurrentState.map, env);
-    drawObjects(levelCurrentState.map,state, env);
+    drawObjects(levelCurrentState.map, state, ~tickTimeMS, env);
     drawToolbar(
       levelCurrentState.items,
-      ~accelerateTime,
       ~inPreparingLevel=true,
       ~allButtonStates,
       state.spriteData,
@@ -1164,6 +1158,12 @@ let draw = (state, env) => {
       }),
     ) =>
     let deltaTime = Env.deltaTime(env) *. 1000.0;
+    if (playClicked) {
+      setLastAccelerating(! lastAccelerating^);
+    };
+    let accelerating = lastAccelerating^;
+    let tickTimeMS =
+      accelerating ? tickTimeMS /. accelerateMult : tickTimeMS *. 1.;
 
     let (pastLevelStates, levelCurrentState) =
       if (lastTickTime^ > tickTimeMS) {
@@ -1214,6 +1214,7 @@ let draw = (state, env) => {
       };
       drawObjects(
         ~previousLevel=pastLevel,
+        ~tickTimeMS,
         ~time=lastTickTime^,
         levelCurrentState.map,
         state,
@@ -1224,6 +1225,8 @@ let draw = (state, env) => {
       [],
       state.spriteData,
       None,
+      ~accelerateTime=accelerating,
+      ~canAccelerate=true,
       ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
@@ -1236,7 +1239,7 @@ let draw = (state, env) => {
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, ~time=totalTime^, env);
     drawLines(level.map, env);
-    drawObjects(level.map, state, env);
+    drawObjects(level.map, state, ~tickTimeMS, env);
     drawToolbar(
       [],
       state.spriteData,
@@ -1262,10 +1265,17 @@ let draw = (state, env) => {
       LoseLevel({loseState, preparingUndoStack: prepLevelState}),
     ) =>
     drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
-    drawObjects(loseState.map, state, env);
-    drawObjects(loseState.map, state, env);
-    drawToolbar([], state.spriteData, None, ~allButtonStates,
-      ~inPreparingLevel=false, ~time=totalTime^, env);
+    drawLines(loseState.map, env);
+    drawObjects(loseState.map, state, ~tickTimeMS, env);
+    drawToolbar(
+      [],
+      state.spriteData,
+      None,
+      ~allButtonStates,
+      ~inPreparingLevel=false,
+      ~time=totalTime^,
+      env,
+    );
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (playClicked) {
       setGameState(PreparingLevel(prepLevelState));
