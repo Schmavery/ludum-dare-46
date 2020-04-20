@@ -11,10 +11,10 @@ let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight -. 2.0 *. btnMargin;
 let basedirname = Filename.dirname(Sys.argv[0]) ++ "/";
-let lossCountRudeMessage = 2;
+let lossCountRudeMessage = 4;
 let rudeLossMessages = [
   "It's really not that hard.",
-  "You'll get it eventually?",
+  "Hope you're not in a hurry.",
 ];
 
 module StringMap = Map.Make(String);
