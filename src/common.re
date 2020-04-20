@@ -10,7 +10,6 @@ let tickTimeMS = 600.0;
 let loseMsgTimeMS = 1500.0;
 let winMsgTimeMS = 1500.0;
 let btnSize = toolbarHeight -. 2.0 *. btnMargin;
-let basedirname = Filename.dirname(Sys.argv[0]) ++ "/";
 let lossCountRudeMessage = 4;
 let rudeLossMessages = [
   "It's really not that hard.",

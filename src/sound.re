@@ -17,7 +17,7 @@ let load = env => {
       name,
       (
         Reprocessing.Env.loadSound(
-          Printf.sprintf("%s/assets/sounds/%s.wav", basedirname, name),
+          Printf.sprintf("assets/sounds/%s.wav", name),
           env,
         ),
         volume,
