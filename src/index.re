@@ -620,7 +620,11 @@ let drawMessage =
 
   switch (withControl, spriteData) {
   | (Some(assetName), Some(spriteData)) =>
-    let body = "press         to continue";
+    let body =
+      switch (assetName) {
+      | "back" => "press         to try again"
+      | _ => "press         to continue"
+      };
     let textWidth2 = Draw.textWidth(~font, ~body, env);
     let rect = getPlayRect(env);
     let x2 = (Env.width(env) - textWidth2) / 2;
@@ -1326,34 +1330,30 @@ let draw = (state, env) => {
       env,
     );
     let deltaTime = Env.deltaTime(env) *. 1000.0;
-    if (playClicked) {
+    if (playClicked || restartClicked) {
       setGameState(PreparingLevel(prepLevelState));
     };
 
-    if (lossCounter^ != 0 && lossCounter^ mod lossCountRudeMessage == 0) {
-      let index =
-        (
-          lossCounter^
-          / lossCountRudeMessage
-          + String.length(initialLevel.title)
-        )
-        mod List.length(rudeLossMessages);
-      drawMessage(
-        List.nth(rudeLossMessages, index),
-        state.font,
-        ~withControl="play",
-        ~spriteData=state.spriteData,
-        env,
-      );
-    } else {
-      drawMessage(
-        "Oh no! Keep him alive next time, ok?",
-        state.font,
-        ~withControl="play",
-        ~spriteData=state.spriteData,
-        env,
-      );
-    };
+    let message =
+      if (lossCounter^ != 0 && lossCounter^ mod lossCountRudeMessage == 0) {
+        let index =
+          (
+            lossCounter^
+            / lossCountRudeMessage
+            + String.length(initialLevel.title)
+          )
+          mod List.length(rudeLossMessages);
+        List.nth(rudeLossMessages, index);
+      } else {
+        "Oh no! Keep him alive next time, ok?";
+      };
+    drawMessage(
+      message,
+      state.font,
+      ~withControl="back",
+      ~spriteData=state.spriteData,
+      env,
+    );
   };
 
   {
