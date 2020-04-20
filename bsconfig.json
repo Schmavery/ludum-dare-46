@@ -1,7 +1,7 @@
 {
   "name": "reprocessing-example",
   "sources": "src",
-  "bs-dependencies": ["reprocessing", "rex-json"],
+  "bs-dependencies": ["reprocessing", "@bsansouci/reasongl", "rex-json"],
   "entries": [{
     "backend": "bytecode",
     "main-module": "IndexHot"

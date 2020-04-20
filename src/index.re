@@ -1096,6 +1096,21 @@ let draw = (state, env) => {
   let undoClicked =
     undoClicked || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
 
+  // Start button code
+  let startButtonState = Hooks.useState(__LOC__, false);
+  let width = 642. /. 2.;
+  let height = 369. /. 2.;
+  let startButtonRect =
+    Rect.fromPoints(
+      Point.create(
+        Env.width(env)->float_of_int /. 2. -. width /. 2.,
+        Env.height(env)->float_of_int /. 2. -. height /. 2.,
+      ),
+      Point.create(width, height),
+    );
+  let (startButtonClicked, (startButtonDown, startButtonHovered)) =
+    getClickOn(startButtonRect, mousePtf, startButtonState, env);
+
   let (lossCounter, setLossCounter) = Hooks.useState(__LOC__, 0);
 
   let allButtonStates = {
@@ -1137,7 +1152,21 @@ let draw = (state, env) => {
       env,
     );
 
-    if (state.mouse.down || playClicked) {
+    Assets.drawSprite(
+      state.spriteData,
+      "start"
+      ++ (startButtonDown ? "_pressed" : startButtonHovered ? "_hovered" : ""),
+      ~pos=
+        Point.create(
+          startButtonRect.left +. startButtonRect.width /. 2.,
+          startButtonRect.top +. startButtonRect.height /. 2.,
+        ),
+      ~width=startButtonRect.width,
+      ~height=startButtonRect.height,
+      env,
+    );
+
+    if (startButtonClicked || playClicked) {
       setGameState(PreparingLevel([first]));
     };
   | (
