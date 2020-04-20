@@ -344,9 +344,9 @@ let getPlayRect = env => {
 };
 
 type allButtonStates = {
-  undo: bool,
-  restart: bool,
-  play: bool,
+  undo: (bool, bool),
+  restart: (bool, bool),
+  play: (bool, bool),
 };
 
 let drawToolbar =
@@ -369,7 +369,8 @@ let drawToolbar =
   // Draw.fill(Utils.color(~r=32, ~g=60, ~b=86, ~a=255), env);
   // Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
 
-  let pressed = b => b ? "_pressed" : "";
+  let pressed = ((down, hovered)) =>
+    down ? "_pressed" : hovered ? "_hovered" : "";
   let rect = getUndoRect(env);
   Assets.drawSprite(
     spriteData,
@@ -937,17 +938,18 @@ let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) =
 };
 
 let getClickOn = (rect, mousePtf, (down, setDown), env) => {
+  let hovered = rect->Rect.containsPtf(mousePtf);
   let clicked =
     if (Env.mousePressed(env)) {
-      setDown(rect->Rect.containsPtf(mousePtf));
+      setDown(hovered);
       false;
     } else if (down^) {
       setDown(false);
-      rect->Rect.containsPtf(mousePtf);
+      hovered;
     } else {
       false;
     };
-  (clicked, down^);
+  (clicked, (down^, hovered));
 };
 
 let draw = (state, env) => {
