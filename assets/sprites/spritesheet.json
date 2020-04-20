@@ -2,23 +2,31 @@
 
 {
 	"filename": "accelerate.png",
-	"frame": {"x":262,"y":388,"w":240,"h":240},
+	"frame": {"x":4,"y":637,"w":241,"h":241},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
-	"sourceSize": {"w":240,"h":240}
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
+},
+{
+	"filename": "accelerate_pressed.png",
+	"frame": {"x":253,"y":637,"w":241,"h":241},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
 },
 {
 	"filename": "back.png",
-	"frame": {"x":4,"y":636,"w":240,"h":241},
+	"frame": {"x":4,"y":886,"w":241,"h":241},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":241},
-	"sourceSize": {"w":240,"h":241}
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
 },
 {
 	"filename": "back_pressed.png",
-	"frame": {"x":252,"y":636,"w":240,"h":241},
+	"frame": {"x":262,"y":388,"w":240,"h":241},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":241},
@@ -106,19 +114,27 @@
 },
 {
 	"filename": "play.png",
-	"frame": {"x":4,"y":885,"w":240,"h":240},
+	"frame": {"x":253,"y":886,"w":241,"h":241},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
-	"sourceSize": {"w":240,"h":240}
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
+},
+{
+	"filename": "play_pressed.png",
+	"frame": {"x":4,"y":1135,"w":241,"h":241},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
 },
 {
 	"filename": "undo.png",
-	"frame": {"x":252,"y":885,"w":240,"h":240},
+	"frame": {"x":253,"y":1135,"w":241,"h":241},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
-	"sourceSize": {"w":240,"h":240}
+	"spriteSourceSize": {"x":0,"y":0,"w":241,"h":241},
+	"sourceSize": {"w":241,"h":241}
 },
 {
 	"filename": "wall.png",
@@ -133,8 +149,8 @@
 	"version": "1.0",
 	"image": "spritesheet.png",
 	"format": "RGBA8888",
-	"size": {"w":506,"h":1129},
+	"size": {"w":506,"h":1380},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:ac5631b93e3dc648022ea8d08e946b94:eb36ab59d7c08f6651417842d4ea68d9:729adc6043343cfda41c447ce8f464d6$"
+	"smartupdate": "$TexturePacker:SmartUpdate:bf034db1becd0e36a85793e25936c90e:7a7a35563f715f007339d67bcdb319f6:729adc6043343cfda41c447ce8f464d6$"
 }
 }

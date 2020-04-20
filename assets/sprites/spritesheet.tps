@@ -198,6 +198,22 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">accelerate_pressed.png</key>
+            <key type="filename">play_pressed.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>60,60,121,121</rect>
+                <key>scale9Paddings</key>
+                <rect>60,60,121,121</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">back_pressed.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -300,6 +316,8 @@
             <filename>back.png</filename>
             <filename>play.png</filename>
             <filename>back_pressed.png</filename>
+            <filename>accelerate_pressed.png</filename>
+            <filename>play_pressed.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
