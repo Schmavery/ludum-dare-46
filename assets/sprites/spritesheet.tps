@@ -198,8 +198,11 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">accelerate_disabled.png</key>
             <key type="filename">accelerate_pressed.png</key>
+            <key type="filename">play_disabled.png</key>
             <key type="filename">play_pressed.png</key>
+            <key type="filename">undo_pressed.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -214,6 +217,7 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">back_disabled.png</key>
             <key type="filename">back_pressed.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -318,6 +322,10 @@
             <filename>back_pressed.png</filename>
             <filename>accelerate_pressed.png</filename>
             <filename>play_pressed.png</filename>
+            <filename>undo_pressed.png</filename>
+            <filename>accelerate_disabled.png</filename>
+            <filename>back_disabled.png</filename>
+            <filename>play_disabled.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
