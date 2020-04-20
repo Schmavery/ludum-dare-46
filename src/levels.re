@@ -27,7 +27,7 @@ let emptyLevel = {
 };
 
 let boulderPitTutorial = {
-  title: "Pretty Simple",
+  title: "Press Play",
   items: [],
   map: [
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall],
@@ -117,7 +117,7 @@ let placeBoulderTutorial = {
 };
 
 let multiPitTutorial = {
-  title: "Multi pit tutorial",
+  title: "Little More Interesting",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -190,7 +190,7 @@ let multiPitTutorial = {
 };
 
 let multiPushBoulderTutorial = {
-  title: "Multi boulder push tutorial",
+  title: "Picking up a Package",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -269,7 +269,7 @@ let multiPushBoulderTutorial = {
 };
 
 let dontbreak1 = {
-  title: "Please Don't Break",
+  title: "Disappearing Trick",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -564,7 +564,7 @@ let dontbreak2 = {
 };
 
 let boulderWall1 = {
-  title: "Boulder Wall",
+  title: "Crunch",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -760,7 +760,7 @@ let level2 = {
 };
 
 let ambiguousPath1 = {
-  title: "Ambiguity 1",
+  title: "Ambiguity",
   // items: editorItemList,
   items: [
     Floor(Regular, Boulder(id(), Hard)),
@@ -929,7 +929,7 @@ let ambiguousPath1 = {
 };
 
 let ambiguousPath2 = {
-  title: "Ambiguity 2",
+  title: "Looks Familiar...",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -1102,7 +1102,7 @@ let ambiguousPath2 = {
 };
 
 let ambiguousPath3 = {
-  title: "Ambiguity 3",
+  title: "Just One More",
   // items: editorItemList,
   items: [
     Floor(Regular, Boulder(id(), Hard)),
@@ -1456,7 +1456,7 @@ let zigzag1 = {
 };
 
 let withAFriend = {
-  title: "BFFs",
+  title: "Fun with a Friend",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),
@@ -1588,7 +1588,7 @@ let withAFriend = {
 };
 
 let rotateTutorial = {
-  title: "Rotate Tutorial",
+  title: "Spinny",
   items: [Floor(Spinner(CCW), Empty), Floor(Spinner(CW), Empty)],
   map: [
     [Wall, Wall, Wall, Wall, Wall, Wall, Wall],
@@ -1645,7 +1645,7 @@ let rotateTutorial = {
 };
 
 let bigSquare = {
-  title: "Big Square",
+  title: "Square Dancing",
   items: [
     Floor(Regular, Boulder(id(), Hard)),
     Floor(Regular, Boulder(id(), Hard)),

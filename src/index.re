@@ -608,7 +608,16 @@ let tick = (level, state, env) => {
 };
 
 let drawMessage =
-    (message, font, ~offset=0, ~withControl=?, ~time=0., ~spriteData=?, env) => {
+    (
+      message,
+      font,
+      ~offset=0,
+      ~withControl=?,
+      ~alternativeText=?,
+      ~time=0.,
+      ~spriteData=?,
+      env,
+    ) => {
   let y = (180 + offset - fontHeight) / 2;
   let textWidth = Draw.textWidth(~font, ~body=message, env);
   let x = (Env.width(env) - textWidth) / 2;
@@ -624,6 +633,16 @@ let drawMessage =
 
   Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
   Draw.text(~font, ~body=message, ~pos=(x, y), env);
+
+  Option.iter(
+    t => {
+      let textWidth = Draw.textWidth(~font, ~body=t, env);
+      let x2 = (Env.width(env) - textWidth) / 2;
+      let y2 = y + fontHeight + 24;
+      Draw.text(~font, ~body=t, ~pos=(x2, y2), env);
+    },
+    alternativeText,
+  );
 
   switch (withControl, spriteData) {
   | (Some(assetName), Some(spriteData)) =>
@@ -1092,15 +1111,15 @@ let draw = (state, env) => {
     setLastTickTime(tickTimeMS +. 1.);
   };
 
-  if (Env.keyPressed(T, env)) {
+  if (editor^ && Env.keyPressed(T, env)) {
     setLevels(Levels.all);
     setGameState(Intro);
     setLastTickTime(tickTimeMS +. 1.);
   };
 
-  if (Env.keyPressed(E, env)) {
-    editor := ! editor^;
-  };
+  /* if (Env.keyPressed(E, env)) { */
+  /*   editor := ! editor^; */
+  /* }; */
 
   if (editor^) {
     Draw.background(Constants.red, env);
@@ -1111,8 +1130,14 @@ let draw = (state, env) => {
   switch (levels^, gameState^) {
   | ([], _) => drawMessage("You WON the whole game", state.font, env)
   | ([first, ...rest], Intro) =>
-    drawMessage("A Treacherous Crossing", state.font, env);
-    if (playClicked) {
+    drawMessage(
+      "Death Trap II",
+      ~alternativeText="Revenge of the Walls",
+      state.font,
+      env,
+    );
+
+    if (state.mouse.down || playClicked) {
       setGameState(PreparingLevel([first]));
     };
   | (
