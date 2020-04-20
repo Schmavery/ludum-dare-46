@@ -199,7 +199,7 @@ let updateMapTile = (map, {x, y}: Point.Int.t, update) => {
 let getInventoryTopLeft = env => {
   let height = float_of_int(Env.height(env));
   let backgroundY = height -. toolbarHeight;
-  let xOffset = btnMargin +. (btnMargin +. btnSize) *. 4.0;
+  let xOffset = 340.;
   let yOffset = backgroundY +. btnMargin;
   Point.create(xOffset, yOffset);
 };
@@ -303,8 +303,9 @@ let getUndoRect = env => {
   let height = float_of_int(Env.height(env));
   let backgroundY = height -. toolbarHeight;
   let size = tileSizef *. 1.4;
+  let delta = btnMargin /. 2.;
   Rect.fromPoints(
-    Point.create(btnMargin +. size +. btnMargin, btnMargin +. backgroundY),
+    Point.create(btnMargin +. size +. btnMargin +. delta, btnMargin +. backgroundY -. delta),
     Point.create(size, size),
   );
 };
@@ -313,8 +314,9 @@ let getBackRect = env => {
   let height = float_of_int(Env.height(env));
   let backgroundY = height -. toolbarHeight;
   let size = tileSizef *. 1.4;
+  let delta = btnMargin /. 2.;
   Rect.fromPoints(
-    Point.create(btnMargin, btnMargin +. backgroundY),
+    Point.create(btnMargin +. delta, btnMargin +. backgroundY -. delta),
     Point.create(size, size),
   );
 };
@@ -323,10 +325,11 @@ let getPlayRect = env => {
   let height = float_of_int(Env.height(env));
   let backgroundY = height -. toolbarHeight;
   let size = tileSizef *. 1.4;
+  let delta = btnMargin /. 2.;
   Rect.fromPoints(
     Point.create(
-      btnMargin +. size +. btnMargin +. size +. btnMargin,
-      btnMargin +. backgroundY,
+      btnMargin +. size +. btnMargin +. size +. btnMargin +. delta,
+      btnMargin +. backgroundY -. delta,
     ),
     Point.create(size, size),
   );
@@ -353,8 +356,8 @@ let drawToolbar =
   let height = float_of_int(Env.height(env));
   let x = 0.0;
   let backgroundY = height -. toolbarHeight;
-  Draw.fill(Utils.color(~r=32, ~g=60, ~b=86, ~a=255), env);
-  Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
+  // Draw.fill(Utils.color(~r=32, ~g=60, ~b=86, ~a=255), env);
+  // Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
 
   let pressed = b => b ? "_pressed" : "";
   let rect = getUndoRect(env);
@@ -399,6 +402,16 @@ let drawToolbar =
     ~height=rect.height,
     env,
   );
+
+  Draw.pushStyle(env);
+  Draw.fill(Utils.color(~r=84, ~g=78, ~b=104, ~a=255), env);
+  Draw.stroke(Utils.color(~r=84, ~g=78, ~b=104, ~a=255), env);
+  Draw.strokeWeight(12, env);
+  // Draw.strokeCap(Round, env);
+  let x = rect.left +. rect.width +. btnMargin *. 2.;
+  Draw.rectf(~pos=(x, backgroundY), ~width=width -. x -. 24., ~height=84., env);
+
+  Draw.popStyle(env);
 
   drawInventory(inventory, spriteData, hovered, ~time, env);
 };
