@@ -937,6 +937,14 @@ let draw = (state, env) => {
       | (_, _, Some(i)) when Env.mousePressed(env) => levelCurrentState
       | (_, Some(mapSquare), Some((draggedI, _))) =>
         setDragging(None);
+        let newTile =
+          switch (List.nth(levelCurrentState.items, draggedI)) {
+          | Floor(k, Boulder(_, bk)) => Floor(k, Boulder(Levels.id(), bk))
+          | Floor(k, Player(_, f, m)) =>
+            Floor(k, Player(Levels.id(), f, m))
+          | t => t
+          };
+
         Sound.play("drop", state, env);
         {
           ...levelCurrentState,
@@ -945,12 +953,7 @@ let draw = (state, env) => {
               (i, _) => editor^ || i != draggedI,
               levelCurrentState.items,
             ),
-          map:
-            setMapTile(
-              levelCurrentState.map,
-              mapSquare,
-              List.nth(levelCurrentState.items, draggedI),
-            ),
+          map: setMapTile(levelCurrentState.map, mapSquare, newTile),
         };
       | (_, _, Some(i)) =>
         setDragging(None);
