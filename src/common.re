@@ -160,7 +160,7 @@ module List = {
 
 module Sound = {
   // This is a map of the sound name to the volume level.
-  let names = [("drop", 1.0), ("pickup", 1.0)];
+  let names = [("drop", 4.0), ("pickup", 4.0), ("win", 1.0), ("lose", 1.0), ("moving_boulder", 1.0), ("rock_crack", 0.5)];
 
   let load = env => {
     let loadSoundHelper = (sounds, (name: string, volume)) =>
@@ -180,7 +180,7 @@ module Sound = {
 
   let play = (name, state, env) =>
     switch (StringMap.find(name, state.soundData)) {
-    | (s, volume) => Reprocessing.Env.playSound(s, ~loop=false, ~volume, env)
+    | (s, volume) => Reprocessing.Env.playSound(s, ~loop=false, ~volume=volume, env)
     | exception Not_found => print_endline("Couldn't find sound " ++ name)
     };
 };

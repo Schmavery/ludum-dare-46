@@ -402,24 +402,26 @@ let turnFacing = (facing, move) => {
   };
 };
 
-let rec resolveMove = (level, pos, moveDelta, retrying) => {
+let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
   let secondPos = Point.Int.add(pos, moveDelta);
   let replaceWith = (level, t1, t2) =>
     Move(setMapTile(setMapTile(level, pos, t1), secondPos, t2));
 
   let retryResolveMove = level =>
-    !retrying ? resolveMove(level, pos, moveDelta, true) : Move(level);
+    !retrying ? resolveMove(level, pos, moveDelta, true, state, env) : Move(level);
 
   let resolveMove = (level, pos, moveDelta) =>
-    !retrying ? resolveMove(level, pos, moveDelta, false) : Move(level);
+    !retrying ? resolveMove(level, pos, moveDelta, false, state, env) : Move(level);
 
   switch (getMapTile(level, pos), getMapTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
   | (Floor(k1, Boulder(id, health)), Wall) => Move(level)
   | (_, Floor(_, Player(_))) => Lose
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
+    Sound.play("moving_boulder", state, env);
     replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)))
   | (Floor(k1, Boulder(id, health)), Pit) =>
+    Sound.play("moving_boulder", state, env);
     replaceWith(level, Floor(k1, Empty), Floor(FilledPit(id), Empty))
   | (Floor(k, Player(id, facing, moves)), Floor(Spinner(dir), Empty)) =>
     let move = dir == CW ? TurnRight : TurnLeft;
@@ -435,6 +437,7 @@ let rec resolveMove = (level, pos, moveDelta, retrying) => {
       when retrying =>
     let move = dir == CW ? TurnRight : TurnLeft;
     let obj = boulderState == Hard ? Boulder(id2, Cracked) : Empty;
+    Sound.play("rock_crack", state, env);
     replaceWith(
       level,
       Floor(Spinner(dir), Player(id, facing, [move, ...moves])),
@@ -444,11 +447,11 @@ let rec resolveMove = (level, pos, moveDelta, retrying) => {
     replaceWith(level, Floor(k1, Empty), Floor(k2, p))
   | (Floor(_, Player(_)), Wall)
   | (Floor(_, Player(_)), Pit) => Lose
-  | (Floor(k1, Player(_) as p), Floor(k2, Boulder(_, Cracked)))
+  | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, boulderState)))
       when retrying =>
-    replaceWith(level, Floor(k1, p), Floor(k2, Empty))
-  | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, Hard))) when retrying =>
-    replaceWith(level, Floor(k1, p), Floor(k2, Boulder(id, Cracked)))
+    let obj = boulderState == Hard ? Boulder(id, Cracked) : Empty;
+    Sound.play("rock_crack", state, env);
+    replaceWith(level, Floor(k1, p), Floor(k2, obj))
   | (Floor(k1, Player(_) | Boulder(_, _)), Floor(k2, Boulder(_))) =>
     switch (resolveMove(level, secondPos, moveDelta)) {
     | Move(level) => retryResolveMove(level)
@@ -462,7 +465,7 @@ type agentInfo =
   | Push(facing, Point.Int.t);
 
 // TODO: tick needs to return a win or lose state that's compatible with animation
-let tick = level => {
+let tick = (level, state, env) => {
   let fold_righti = (f, a, l) =>
     snd(
       List.fold_right(
@@ -510,7 +513,7 @@ let tick = level => {
     (level, agent) =>
       switch (level, agent) {
       | (Move(level), Push(facing, pos)) =>
-        resolveMove(level, pos, facingToDelta(facing), false)
+        resolveMove(level, pos, facingToDelta(facing), false, state, env)
       | (_, AgentWin)
       | (Win, _) => Win
       | (Lose, _) => Lose // TODO: Might still want to resolve the rest of the moves..
@@ -665,12 +668,12 @@ let easeInOutCubic = t =>
   t < 0.5
     ? 4. *. t *. t *. t : (t -. 1.) *. (2. *. t -. 2.) *. (2. *. t -. 2.) +. 1.;
 
-let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
+let drawObjects = (~previousLevel=?, ~time=0., level, state, env) => {
   let topleft = getMapTopLeft(level, env);
   let drawHelper = (x, y, obj) => {
     let p = Point.Int.create(x, y);
     let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
-    drawObj(~obj, ~pos, ~spriteData, env);
+    drawObj(~obj, ~pos, ~spriteData=state.spriteData, env);
   };
   let calculateBounce =
       (elapsedTime, pos: Point.Float.t, prevPos: Point.Float.t) => {
@@ -783,7 +786,7 @@ let drawObjects = (~previousLevel=?, ~time=0., level, spriteData, env) => {
                 drawObj(
                   ~obj,
                   ~pos=Point.Float.(animatedPosition + bouncedPosition),
-                  ~spriteData,
+                  ~spriteData=state.spriteData,
                   ~height=squishY,
                   ~width=squishX,
                   env,
@@ -872,7 +875,7 @@ let draw = (state, env) => {
   switch (levels^, gameState^) {
   | ([], _) => drawMessage("You WON the whole game", state.font, env)
   | ([first, ...rest], Intro) =>
-    drawMessage("Welcome", state.font, ~withControlHelp="press SPACE", env);
+    drawMessage("A Treacherous Crossing", state.font, ~withControlHelp="press SPACE", env);
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel([first]));
     };
@@ -1018,7 +1021,7 @@ let draw = (state, env) => {
     };
     drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(levelCurrentState.map, env);
-    drawObjects(levelCurrentState.map, state.spriteData, env);
+    drawObjects(levelCurrentState.map,state, env);
     drawToolbar(
       levelCurrentState.items,
       ~accelerateTime,
@@ -1053,7 +1056,7 @@ let draw = (state, env) => {
 
     let (pastLevelStates, levelCurrentState) =
       if (lastTickTime^ > tickTimeMS) {
-        switch (tick(levelCurrentState.map)) {
+        switch (tick(levelCurrentState.map, state, env)) {
         | Move(level) =>
           setLastTickTime(0.0);
           let newLevelState = {...levelCurrentState, map: level};
@@ -1068,12 +1071,14 @@ let draw = (state, env) => {
           if (editor^) {
             setGameState(PreparingLevel(preparingUndoStack));
           } else {
+            Sound.play("win", state, env);
             setLevels(restOfLevels);
             setGameState(WinLevel(levelCurrentState));
           };
           setLastTickTime(tickTimeMS +. 1.);
           (pastLevelStates, levelCurrentState);
         | Lose =>
+          Sound.play("lose", state, env);
           setGameState(
             LoseLevel({loseState: levelCurrentState, preparingUndoStack}),
           );
@@ -1100,7 +1105,7 @@ let draw = (state, env) => {
         ~previousLevel=pastLevel,
         ~time=lastTickTime^,
         levelCurrentState.map,
-        state.spriteData,
+        state,
         env,
       );
     };
@@ -1112,15 +1117,14 @@ let draw = (state, env) => {
   | ([nextLevel, ..._], WinLevel(level)) =>
     drawMap(level.map, state.spriteData, ~time=totalTime^, env);
     drawLines(level.map, env);
-    drawObjects(level.map, state.spriteData, env);
+    drawObjects(level.map, state, env);
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel([nextLevel]));
     };
-
     drawMessage(
-      "You did it! He's safe and sound.",
+      "That's how it's done!",
       ~withControlHelp="press SPACE",
       state.font,
       env,
@@ -1131,14 +1135,14 @@ let draw = (state, env) => {
     ) =>
     drawMap(loseState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(loseState.map, env);
-    drawObjects(loseState.map, state.spriteData, env);
+    drawObjects(loseState.map, state, env);
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env);
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (Env.keyPressed(Space, env)) {
       setGameState(PreparingLevel(prepLevelState));
     };
     drawMessage(
-      "Gosh, keep him ALIVE next time, will ya?",
+      "Oh no! Keep him alive next time, ok?",
       state.font,
       ~withControlHelp="press SPACE",
       env,
