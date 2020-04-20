@@ -474,7 +474,11 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
   switch (getMapTile(level, pos), getMapTile(level, secondPos)) {
   | (Wall | Pit | Floor(_, Empty), _) => Move(level)
   | (Floor(k1, Boulder(id, health)), Wall) => Move(level)
-  | (_, Floor(_, Player(_))) => Lose
+  | (_, Floor(k, Player(_) as p)) =>
+    Lose(
+      setMapTile(level, secondPos, Floor(k, Empty)),
+      [{obj: p, position: secondPos}],
+    )
   | (Floor(k1, Boulder(id, health)), Floor(k2, Empty)) =>
     Sound.play("moving_boulder", state, env);
     replaceWith(level, Floor(k1, Empty), Floor(k2, Boulder(id, health)));
@@ -507,8 +511,12 @@ let rec resolveMove = (level, pos, moveDelta, retrying, state, env) => {
     );
   | (Floor(k1, Player(_) as p), Floor(k2, Empty)) =>
     replaceWith(level, Floor(k1, Empty), Floor(k2, p))
-  | (Floor(_, Player(_)), Wall)
-  | (Floor(_, Player(_)), Pit) => Lose
+  | (Floor(k, Player(_) as p), Wall)
+  | (Floor(k, Player(_) as p), Pit) =>
+    Lose(
+      setMapTile(level, pos, Floor(k, Empty)),
+      [{obj: p, position: secondPos}],
+    )
   | (Floor(k1, Player(_) as p), Floor(k2, Boulder(id, boulderState)))
       when retrying =>
     let obj = boulderState == Hard ? Boulder(id, Cracked) : Empty;
@@ -576,9 +584,16 @@ let tick = (level, state, env) => {
       switch (level, agent) {
       | (Move(level), Push(facing, pos)) =>
         resolveMove(level, pos, facingToDelta(facing), false, state, env)
+      | (Lose(level, deadList), Push(facing, pos)) =>
+        switch (
+          resolveMove(level, pos, facingToDelta(facing), false, state, env)
+        ) {
+        | Move(level) => Lose(level, deadList)
+        | Win => Lose(level, deadList)
+        | Lose(level, newDeadList) => Lose(level, newDeadList @ deadList)
+        }
       | (_, AgentWin)
       | (Win, _) => Win
-      | (Lose, _) => Lose // TODO: Might still want to resolve the rest of the moves..
       },
     Move(level),
     movingAgents,
@@ -1203,10 +1218,14 @@ let draw = (state, env) => {
           };
           setLastTickTime(tickTimeMS +. 1.);
           (pastLevelStates, levelCurrentState);
-        | Lose =>
+        | Lose(level, deadList) =>
           Sound.play("lose", state, env);
           setGameState(
-            LoseLevel({loseState: levelCurrentState, preparingUndoStack}),
+            LoseLevel({
+              deadList,
+              loseState: levelCurrentState,
+              preparingUndoStack,
+            }),
           );
           setLastTickTime(tickTimeMS +. 1.);
           (pastLevelStates, levelCurrentState);

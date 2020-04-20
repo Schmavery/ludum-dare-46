@@ -78,9 +78,13 @@ type level = {
   items: list(tile),
   title: string,
 };
+type deathInfo = {
+  obj,
+  position: Point.Int.t,
+};
 type tick =
   | Win
-  | Lose
+  | Lose(map, list(deathInfo))
   | Move(map);
 
 module Rect = {
@@ -121,6 +125,7 @@ type gameState =
   | Intro
   | WinLevel(level, level)
   | LoseLevel({
+      deadList: list(deathInfo),
       loseState: level,
       preparingUndoStack: list(level),
     })
