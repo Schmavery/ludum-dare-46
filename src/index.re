@@ -132,7 +132,7 @@ let drawTile =
       };
       Assets.drawSpriteWithCenterRotation(
         spriteData,
-        "wall",
+        "rotator",
         ~pos,
         ~width=tileSizef,
         ~height=tileSizef,
@@ -305,7 +305,10 @@ let getUndoRect = env => {
   let size = tileSizef *. 1.4;
   let delta = btnMargin /. 2.;
   Rect.fromPoints(
-    Point.create(btnMargin +. size +. btnMargin +. delta, btnMargin +. backgroundY -. delta),
+    Point.create(
+      btnMargin +. size +. btnMargin +. delta,
+      btnMargin +. backgroundY -. delta,
+    ),
     Point.create(size, size),
   );
 };
@@ -415,7 +418,12 @@ let drawToolbar =
   Draw.strokeWeight(12, env);
   // Draw.strokeCap(Round, env);
   let x = rect.left +. rect.width +. btnMargin *. 2.;
-  Draw.rectf(~pos=(x, backgroundY), ~width=width -. x -. 24., ~height=84., env);
+  Draw.rectf(
+    ~pos=(x, backgroundY),
+    ~width=width -. x -. 24.,
+    ~height=84.,
+    env,
+  );
 
   Draw.popStyle(env);
 
@@ -578,27 +586,32 @@ let tick = (level, state, env) => {
 let drawMessage =
     (message, font, ~offset=0, ~withControl=?, ~time=0., ~spriteData=?, env) => {
   let y = (180 + offset - fontHeight) / 2;
-  {
-    let textWidth = Draw.textWidth(~font, ~body=message, env);
-    let x = (Env.width(env) - textWidth) / 2;
-    Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
-    Draw.text(~font, ~body=message, ~pos=(x, y), env);
-  };
+  let textWidth = Draw.textWidth(~font, ~body=message, env);
+  let x = (Env.width(env) - textWidth) / 2;
+
+  let fullWidth = Env.width(env);
+
+  Draw.fill(Utils.color(~r=13, ~g=43, ~b=69, ~a=200), env);
+  Draw.rect(~pos=(x, y - 30), ~width=fullWidth, ~height=fontHeight, env);
+
+  Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
+  Draw.text(~font, ~body=message, ~pos=(x, y), env);
 
   switch (withControl, spriteData) {
   | (Some(assetName), Some(spriteData)) =>
     let body = "press         to continue";
-    let textWidth = Draw.textWidth(~font, ~body, env);
+    let textWidth2 = Draw.textWidth(~font, ~body, env);
     let rect = getPlayRect(env);
-    let x = (Env.width(env) - textWidth) / 2;
-    let y = y + fontHeight + 24;
+    let x2 = (Env.width(env) - textWidth2) / 2;
+    let y2 = y + fontHeight + 24;
+    Draw.rect(~pos=(x, y), ~width=fullWidth, ~height=fontHeight + 60, env);
     Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
-    Draw.text(~font, ~body, ~pos=(x, y), env);
+    Draw.text(~font, ~body, ~pos=(x2, y2), env);
 
     Assets.drawSprite(
       spriteData,
       assetName,
-      ~pos=Point.create(x->float_of_int +. 166., y->float_of_int -. 12.),
+      ~pos=Point.create(x2->float_of_int +. 166., y2->float_of_int -. 12.),
       ~width=rect.width,
       ~height=rect.height,
       env,

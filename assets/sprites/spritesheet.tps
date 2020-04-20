@@ -256,6 +256,7 @@
             <key type="filename">pit.png</key>
             <key type="filename">pit_with_boulder.png</key>
             <key type="filename">pit_with_cracked_boulder.png</key>
+            <key type="filename">rotator.png</key>
             <key type="filename">wall.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -326,6 +327,7 @@
             <filename>accelerate_disabled.png</filename>
             <filename>back_disabled.png</filename>
             <filename>play_disabled.png</filename>
+            <filename>rotator.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
