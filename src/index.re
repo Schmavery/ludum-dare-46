@@ -1117,6 +1117,7 @@ let draw = (state, env) => {
     drawMap(levelCurrentState.map, state.spriteData, ~time=totalTime^, env);
     drawLines(levelCurrentState.map, env);
     drawObjects(levelCurrentState.map, state, ~tickTimeMS, env);
+    drawMessage(levelCurrentState.title, state.font, env);
     drawToolbar(
       levelCurrentState.items,
       ~inPreparingLevel=true,
@@ -1235,6 +1236,7 @@ let draw = (state, env) => {
         env,
       );
     };
+    drawMessage(levelCurrentState.title, state.font, env);
     drawToolbar(
       [],
       state.spriteData,
