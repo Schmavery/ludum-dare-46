@@ -884,6 +884,11 @@ let draw = (state, env) => {
 
     let hoveredItem = getHoveredInventoryIndex(levelCurrentState.items, env);
     let hoveredMapSquare = getHoveredMapSquare(levelCurrentState.map, env);
+    let hoveredTile =
+      Option.map(
+        p => (getMapTile(levelCurrentState.map, p), p),
+        hoveredMapSquare,
+      );
 
     if (editor^ && Env.keyPressed(P, env)) {
       Serialize.map(levelCurrentState.map);
@@ -899,11 +904,6 @@ let draw = (state, env) => {
 
         let append = (e, l) => List.rev([e, ...List.rev(l)]);
 
-        let hoveredTile =
-          Option.map(
-            p => (getMapTile(levelCurrentState.map, p), p),
-            hoveredMapSquare,
-          );
         switch (hoveredTile) {
         | Some((Floor(k, Player(id, facing, moves)), pt)) =>
           if (Env.keyPressed(Backspace, env) || Env.keyPressed(Down, env)) {
@@ -1028,7 +1028,29 @@ let draw = (state, env) => {
       env,
     );
     Option.iter(
-      ((i, dragOffset)) =>
+      ((i, dragOffset)) => {
+        switch (hoveredTile) {
+        | Some((Floor(k, Empty), pt)) =>
+          let pos: Point.Float.t =
+            Point.Float.(
+              getMapTopLeft(levelCurrentState.map, env)
+              + ofIntPt(pt)
+              *@ tileSizef
+            );
+          Draw.tint(Utils.color(~r=255, ~g=255, ~b=255, ~a=100), env);
+          drawTile(
+            List.nth(levelCurrentState.items, i),
+            pos,
+            ~time=totalTime^,
+            ~noBackground=true,
+            ~withObj=true,
+            state.spriteData,
+            env,
+          );
+          Draw.noTint(env);
+        | _ => ()
+        };
+
         drawTile(
           List.nth(levelCurrentState.items, i),
           Point.Float.(mousePtf - dragOffset),
@@ -1037,7 +1059,8 @@ let draw = (state, env) => {
           ~withObj=true,
           state.spriteData,
           env,
-        ),
+        );
+      },
       dragging^,
     );
   | ([levelInitialState, ...restOfLevels], RunningLevel({states: []})) =>
