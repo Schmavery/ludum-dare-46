@@ -967,7 +967,7 @@ let draw = (state, env) => {
   let undoButtonRect = getUndoRect(env);
   let (undoClicked, undoButtonDown) =
     getClickOn(undoButtonRect, mousePtf, undoButtonState, env);
-  let undoClicked = undoClicked || Env.keyPressed(Z, env);
+  let undoClicked = undoClicked || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
 
   let (lossCounter, setLossCounter) = Hooks.useState(__LOC__, 0);
 
