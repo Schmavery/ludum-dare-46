@@ -65,7 +65,7 @@ type spinnerDirection =
   | CCW;
 type floorKind =
   | Regular
-  | FilledPit(id)
+  | FilledPit(id, boulderHealth)
   | Spinner(spinnerDirection);
 type tile =
   | Wall
