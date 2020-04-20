@@ -921,6 +921,11 @@ let getClickOn = (rect, mousePtf, (down, setDown), env) => {
 
 let draw = (state, env) => {
   Hooks.initialize(state.hooks);
+  let (playingMusic, setPlayingMusic) = Hooks.useState(__LOC__, false);
+  if (! playingMusic^) {
+    setPlayingMusic(true);
+    Sound.play("background_tunes", state, ~loop=true, env);
+  };
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
   let (gameState, setGameState) = Hooks.useState(__LOC__, Intro);
 
