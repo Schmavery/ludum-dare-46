@@ -960,6 +960,8 @@ let draw = (state, env) => {
     getClickOn(undoButtonRect, mousePtf, undoButtonState, env);
   let undoClicked = undoClicked || Env.keyPressed(Z, env);
 
+  let (lossCounter, setLossCounter) = Hooks.useState(__LOC__, 0);
+
   let allButtonStates = {
     restart: restartButtonDown,
     play: playButtonDown,
@@ -1223,6 +1225,7 @@ let draw = (state, env) => {
           (pastLevelStates, levelCurrentState);
         | Lose(level, deadList) =>
           Sound.play("lose", state, env);
+          setLossCounter(lossCounter^ + 1);
           setGameState(
             LoseLevel({
               deadList,
@@ -1321,13 +1324,31 @@ let draw = (state, env) => {
     if (playClicked) {
       setGameState(PreparingLevel(prepLevelState));
     };
-    drawMessage(
-      "Oh no! Keep him alive next time, ok?",
-      state.font,
-      ~withControl="play",
-      ~spriteData=state.spriteData,
-      env,
-    );
+
+    if (lossCounter^ != 0 && lossCounter^ mod lossCountRudeMessage == 0) {
+      let index =
+        (
+          lossCounter^
+          / lossCountRudeMessage
+          + String.length(initialLevel.title)
+        )
+        mod List.length(rudeLossMessages);
+      drawMessage(
+        List.nth(rudeLossMessages, index),
+        state.font,
+        ~withControl="play",
+        ~spriteData=state.spriteData,
+        env,
+      );
+    } else {
+      drawMessage(
+        "Oh no! Keep him alive next time, ok?",
+        state.font,
+        ~withControl="play",
+        ~spriteData=state.spriteData,
+        env,
+      );
+    };
   };
 
   {
