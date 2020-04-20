@@ -1060,7 +1060,11 @@ let draw = (state, env) => {
     };
     drawToolbar([], state.spriteData, None, ~time=totalTime^, env); // TODO: Any items?
     if (restarted) {
-      setGameState(PreparingLevel(levelInitialState));
+      setGameState(
+        PreparingLevel(
+          List.nth(allLevelStates, List.length(allLevelStates) - 1),
+        ),
+      );
       setLastTickTime(tickTimeMS +. 1.);
     };
   | ([nextLevel, ..._], WinLevel(level)) =>
