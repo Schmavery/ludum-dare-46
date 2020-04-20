@@ -812,7 +812,8 @@ let drawObjWithAnimation =
       ~time,
       ~tickTimeMS,
       ~obj,
-      ~scale=1.,
+      ~scaleX=1.,
+      ~scaleY=1.,
       pos: Point.Float.t,
       prevPos: Point.Float.t,
       state,
@@ -863,8 +864,8 @@ let drawObjWithAnimation =
     ~obj,
     ~pos=Point.Float.(animatedPosition + bouncedPosition),
     ~spriteData=state.spriteData,
-    ~height=squishY *. scale,
-    ~width=squishX *. scale,
+    ~height=squishY *. scaleY,
+    ~width=squishX *. scaleX,
     env,
   );
 };
@@ -935,6 +936,83 @@ let drawObjects = (~previousLevel=?, ~time=0., ~tickTimeMS, level, state, env) =
       previousLevel,
     )
   };
+};
+
+let drawAnimatingDead = (~deadList, ~lastTickTime, ~level, ~state, env) => {
+  let topleft = getMapTopLeft(level.map, env);
+
+  List.iter(
+    deadThing => {
+      switch (deadThing.obj) {
+      | Player(id, _, _) as obj =>
+        let p = deadThing.position;
+        let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
+        let prevP = deadThing.prevPosition;
+        let prevPos = Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
+        let time = easeInOutCubic(lastTickTime /. tickTimeMS);
+        let (scaleX, scaleY, pos) =
+          switch (List.nth_opt(List.nth(level.map, p.y), p.x)) {
+          | Some(Pit) =>
+            let v = Utils.lerpf(~low=1.0, ~high=0.6, ~value=time);
+            (v, v, pos);
+          | Some(Wall) =>
+            if (p.y == prevP.y) {
+              let dir = p.x > prevP.x ? (-1.) : 1.;
+              let pos =
+                Point.create(
+                  pos.x
+                  +. dir
+                  *. (
+                    Utils.lerpf(
+                      ~low=0.0,
+                      ~high=tileSizef /. 8. +. 4.,
+                      ~value=time,
+                    )
+                    +. tileSizef
+                    /. 4.
+                    +. 8.
+                  ),
+                  pos.y,
+                );
+              (Utils.lerpf(~low=1.0, ~high=0.3, ~value=time), 1.0, pos);
+            } else {
+              let dir = p.y > prevP.y ? (-1.) : 1.;
+              let pos =
+                Point.create(
+                  pos.x,
+                  pos.y
+                  +. dir
+                  *. (
+                    Utils.lerpf(
+                      ~low=0.0,
+                      ~high=tileSizef /. 8. +. 4.,
+                      ~value=time,
+                    )
+                    +. tileSizef
+                    /. 4.
+                    +. 8.
+                  ),
+                );
+              (1.0, Utils.lerpf(~low=1.0, ~high=0.3, ~value=time), pos);
+            }
+          | _ => (1.0, 1.0, pos)
+          };
+        drawObjWithAnimation(
+          ~time=lastTickTime,
+          ~tickTimeMS,
+          ~obj,
+          ~scaleX,
+          ~scaleY,
+          pos,
+          prevPos,
+          state,
+          env,
+        );
+      | _ => ()
+      }
+    },
+    deadList,
+  );
 };
 
 let getClickOn = (rect, mousePtf, (down, setDown), env) => {
@@ -1270,20 +1348,18 @@ let draw = (state, env) => {
         | Lose(level, deadList) =>
           Sound.play("lose", state, env);
           setLossCounter(lossCounter^ + 1);
+          let newLevelState = {...levelCurrentState, map: level};
           setGameState(
             LoseLevel({
               deadList,
-              loseState: {
-                ...levelCurrentState,
-                map: level,
-              },
+              loseState: newLevelState,
               preparingUndoStack,
             }),
           );
 
           // Set to 0 to make sure the death animation can play for a tick
           setLastTickTime(0.);
-          (pastLevelStates, levelCurrentState);
+          ([levelCurrentState, ...pastLevelStates], newLevelState);
         };
       } else {
         setLastTickTime(lastTickTime^ +. deltaTime);
@@ -1361,41 +1437,13 @@ let draw = (state, env) => {
     drawLines(loseState.map, env);
     drawObjects(loseState.map, state, ~tickTimeMS, env);
 
-    let deltaTime = Env.deltaTime(env) *. 1000.0;
-    if (lastTickTime^ < tickTimeMS) {
-      setLastTickTime(lastTickTime^ +. deltaTime);
-    };
-
-    let drawAnimatingDead = (deadList, level, env) => {
-      let topleft = getMapTopLeft(level.map, env);
-
-      List.iter(
-        deadThing => {
-          switch (deadThing.obj) {
-          | Player(id, _, _) as obj =>
-            let p = deadThing.position;
-            let pos = Point.Float.(topleft + ofIntPt(p) *@ tileSizef);
-            let prevP = deadThing.prevPosition;
-            let prevPos = Point.Float.(topleft + ofIntPt(prevP) *@ tileSizef);
-            let time = lastTickTime^ /. tickTimeMS;
-            let scale = Utils.lerpf(~low=1.0, ~high=0.6, ~value=time);
-            drawObjWithAnimation(
-              ~time=lastTickTime^,
-              ~tickTimeMS,
-              ~obj,
-              ~scale,
-              pos,
-              prevPos,
-              state,
-              env,
-            );
-          | _ => ()
-          }
-        },
-        deadList,
-      );
-    };
-    drawAnimatingDead(deadList, loseState, env);
+    drawAnimatingDead(
+      ~deadList,
+      ~level=loseState,
+      ~lastTickTime=lastTickTime^,
+      ~state,
+      env,
+    );
 
     drawToolbar(
       [],
@@ -1407,6 +1455,12 @@ let draw = (state, env) => {
       ~time=totalTime^,
       env,
     );
+
+    let deltaTime = Env.deltaTime(env) *. 1000.0;
+    if (lastTickTime^ < tickTimeMS) {
+      setLastTickTime(lastTickTime^ +. deltaTime);
+    };
+
     if (playClicked || restartClicked) {
       setGameState(PreparingLevel(prepLevelState));
     };
