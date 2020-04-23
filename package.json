@@ -1,8 +1,8 @@
 {
   "name": "reprocessing-example",
   "scripts": {
-    "start": "./lib/bs/bytecode/indexhot.byte",
-    "start:native": "./lib/bs/native/index.native",
+    "start": "./indexhot.exe",
+    "start:native": "./index.exe",
     "build": "bsb -clean-world -make-world -backend bytecode",
     "build:web": "bsb -make-world -backend js && fpack build ./lib/js/src/index.js --development --nm node_modules",
     "build:native": "bsb -make-world -backend native",
