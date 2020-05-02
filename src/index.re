@@ -304,58 +304,49 @@ let drawInventory = (inventory, spriteData, ~dragging, ~hovered, ~time, env) => 
   );
 };
 
-let getUndoRect = env => {
-  let height = float_of_int(Env.height(env));
-  let backgroundY = height -. toolbarHeight;
-  let size = tileSizef *. 1.4;
-  let delta = btnMargin /. 2.;
-  Rect.fromPoints(
-    Point.create(
-      btnMargin +. size +. btnMargin +. delta,
-      btnMargin +. backgroundY -. delta,
-    ),
-    Point.create(size, size),
-  );
-};
+let useButton = (loc, rect, assetName, env) => {
+  let (pressed, setPressed) = Hooks.useState(__LOC__, ~id=loc, false);
+  let mousePtf = Point.(Float.ofIntPt(fromPair(Env.mouse(env))));
+  let hovered = Rect.containsPtf(rect, mousePtf);
 
-let getBackRect = env => {
-  let height = float_of_int(Env.height(env));
-  let backgroundY = height -. toolbarHeight;
-  let size = tileSizef *. 1.4;
-  let delta = btnMargin /. 2.;
-  Rect.fromPoints(
-    Point.create(btnMargin +. delta, btnMargin +. backgroundY -. delta),
-    Point.create(size, size),
-  );
-};
+  let update = (mouse) => {
+    if (pressed^ && mouse.up && hovered) {
+      setPressed(false);
+      true;
+    } else if (hovered && mouse.down) {
+      setPressed(true);
+      false;
+    } else if (! mouse.pressed) {
+      setPressed(false);
+      false;
+    } else {
+      false;
+    }
+  };
 
-let getPlayRect = env => {
-  let height = float_of_int(Env.height(env));
-  let backgroundY = height -. toolbarHeight;
-  let size = tileSizef *. 1.4;
-  let delta = btnMargin /. 2.;
-  Rect.fromPoints(
-    Point.create(
-      btnMargin +. size +. btnMargin +. size +. btnMargin +. delta,
-      btnMargin +. backgroundY -. delta,
-    ),
-    Point.create(size, size),
-  );
-};
-
-type allButtonStates = {
-  undo: (bool, bool),
-  restart: (bool, bool),
-  play: (bool, bool),
+  let draw = (~assetName=assetName, spriteData) => {
+    let assetName = assetName ++ (pressed^ ? "_pressed" : hovered ? "_hovered" : "");
+    Assets.drawSprite(
+      spriteData,
+      assetName,
+      ~pos=
+        Point.create(
+          rect.left +. rect.width /. 2.,
+          rect.top +. rect.height /. 2.,
+        ),
+      ~width=rect.width,
+      ~height=rect.height,
+      env,
+    );
+  };
+  (update, draw)
 };
 
 let drawToolbar =
     (
       inventory,
-      ~accelerateTime=false,
-      ~canAccelerate=false,
       ~inPreparingLevel=false,
-      ~allButtonStates,
+      ~playRect: Rect.t(float),
       spriteData,
       ~hovered,
       ~dragging,
@@ -364,67 +355,13 @@ let drawToolbar =
     ) => {
   let width = float_of_int(Env.width(env));
   let height = float_of_int(Env.height(env));
-  let x = 0.0;
   let backgroundY = height -. toolbarHeight;
-  // Draw.fill(Utils.color(~r=32, ~g=60, ~b=86, ~a=255), env);
-  // Draw.rectf(~pos=(x, backgroundY), ~width, ~height, env);
-
-  let pressed = ((down, hovered)) =>
-    down ? "_pressed" : hovered ? "_hovered" : "";
-  let rect = getUndoRect(env);
-  Assets.drawSprite(
-    spriteData,
-    "undo" ++ pressed(allButtonStates.undo),
-    ~pos=
-      Point.create(
-        rect.left +. rect.width /. 2.,
-        rect.top +. rect.height /. 2.,
-      ),
-    ~width=rect.width,
-    ~height=rect.height,
-    env,
-  );
-
-  let rect = getBackRect(env);
-  Assets.drawSprite(
-    spriteData,
-    "back" ++ pressed(allButtonStates.restart),
-    ~pos=
-      Point.create(
-        rect.left +. rect.width /. 2.,
-        rect.top +. rect.height /. 2.,
-      ),
-    ~width=rect.width,
-    ~height=rect.height,
-    env,
-  );
-
-  let rect = getPlayRect(env);
-  let playOrAcceleate =
-    if (accelerateTime || !canAccelerate) {
-      "play";
-    } else {
-      "accelerate";
-    };
-  Assets.drawSprite(
-    spriteData,
-    playOrAcceleate ++ pressed(allButtonStates.play),
-    ~pos=
-      Point.create(
-        rect.left +. rect.width /. 2.,
-        rect.top +. rect.height /. 2.,
-      ),
-    ~width=rect.width,
-    ~height=rect.height,
-    env,
-  );
 
   Draw.pushStyle(env);
   Draw.fill(Utils.color(~r=84, ~g=78, ~b=104, ~a=255), env);
   Draw.stroke(Utils.color(~r=84, ~g=78, ~b=104, ~a=255), env);
   Draw.strokeWeight(12, env);
-  // Draw.strokeCap(Round, env);
-  let x = rect.left +. rect.width +. btnMargin *. 2.;
+  let x = playRect.left +. playRect.width +. btnMargin *. 2.;
   Draw.rectf(
     ~pos=(x, backgroundY),
     ~width=width -. x -. 24.,
@@ -652,18 +589,18 @@ let drawMessage =
       | _ => "press         to continue"
       };
     let textWidth2 = Draw.textWidth(~font, ~body, env);
-    let rect = getPlayRect(env);
     let x2 = (Env.width(env) - textWidth2) / 2;
     let y2 = y + fontHeight + 24;
     Draw.tint(Utils.color(~r=255, ~g=236, ~b=214, ~a=255), env);
     Draw.text(~font, ~body, ~pos=(x2, y2), env);
 
+    let buttonSizef = tileSizef *. 1.4;
     Assets.drawSprite(
       spriteData,
       assetName,
       ~pos=Point.create(x2->float_of_int +. 166., y2->float_of_int -. 12.),
-      ~width=rect.width,
-      ~height=rect.height,
+      ~width=buttonSizef,
+      ~height=buttonSizef,
       env,
     );
   | _ => ()
@@ -1034,21 +971,6 @@ let drawAnimatingDead = (~deadList, ~lastTickTime, ~level, ~state, env) => {
   );
 };
 
-let getClickOn = (rect, mousePtf, (down, setDown), env) => {
-  let hovered = rect->Rect.containsPtf(mousePtf);
-  let clicked =
-    if (Env.mousePressed(env)) {
-      setDown(hovered);
-      false;
-    } else if (down^) {
-      setDown(false);
-      hovered;
-    } else {
-      false;
-    };
-  (clicked, (down^, hovered));
-};
-
 let draw = (state, env) => {
   Hooks.initialize(state.hooks);
   let (levels, setLevels) = Hooks.useState(__LOC__, Levels.all);
@@ -1060,58 +982,64 @@ let draw = (state, env) => {
 
   let mousePtf = Point.(Float.ofIntPt(fromPair(Env.mouse(env))));
 
-  let undo =
-    if (Env.mousePressed(env)) {
-      let rect = getUndoRect(env);
-      rect->Rect.containsPtf(
-        Point.(Float.ofIntPt(fromPair(Env.mouse(env)))),
-      );
-    } else {
-      false;
-    };
 
-  let backButtonState = Hooks.useState(__LOC__, false);
-  let backButtonRect = getBackRect(env);
-  let (restartClicked, restartButtonDown) =
-    getClickOn(backButtonRect, mousePtf, backButtonState, env);
-  let restartClicked = restartClicked || Env.keyPressed(R, env);
+  let buttonSizef = tileSizef *. 1.4;
+  let buttonSize = Point.create(buttonSizef, buttonSizef);
+  let buttonDelta = btnMargin /. 2.;
+  let buttonHeight = btnMargin +. (float_of_int(Env.height(env)) -. toolbarHeight) -. buttonDelta;
 
-  let playButtonState = Hooks.useState(__LOC__, false);
-  let playButtonRect = getPlayRect(env);
-  let (playClicked, playButtonDown) =
-    getClickOn(playButtonRect, mousePtf, playButtonState, env);
-  let playClicked = playClicked || Env.keyPressed(Space, env);
+  let restartButtonRect =
+    Rect.fromPoints(
+      Point.create(btnMargin +. buttonDelta, buttonHeight),
+      buttonSize,
+    );
+  let (updateRestartButton, drawRestartButton) = useButton(__LOC__, restartButtonRect, "back", env);
+  let restartClicked = updateRestartButton(state.mouse) || Env.keyPressed(R, env);
+
+
+  let undoButtonRect = Rect.fromPoints(
+      Point.create(
+        (btnMargin +. buttonSizef) +. btnMargin +. buttonDelta,
+        buttonHeight
+      ),
+      buttonSize
+    );
+  let (updateUndoButton, drawUndoButton) = useButton(__LOC__, undoButtonRect, "undo", env);
+  let undoClicked = updateUndoButton(state.mouse) || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
+
+  let playButtonRect = Rect.fromPoints(
+      Point.create(
+        2. *. (btnMargin +. buttonSizef) +. btnMargin +. buttonDelta,
+        buttonHeight
+      ),
+      buttonSize
+    );
+  let (updatePlayButton, drawPlayButton) = useButton(__LOC__, playButtonRect, "play", env);
+  let playClicked = updatePlayButton(state.mouse) || Env.keyPressed(Space, env);
+
   let (lastAccelerating, setLastAccelerating) =
     Hooks.useState(__LOC__, false);
 
-  let undoButtonState = Hooks.useState(__LOC__, false);
-  let undoButtonRect = getUndoRect(env);
-  let (undoClicked, undoButtonDown) =
-    getClickOn(undoButtonRect, mousePtf, undoButtonState, env);
-  let undoClicked =
-    undoClicked || Env.keyPressed(Z, env) || Env.keyPressed(U, env);
-
-  // Start button code
-  let startButtonState = Hooks.useState(__LOC__, false);
-  let width = 642. /. 2.;
-  let height = 369. /. 2.;
-  let startButtonRect =
-    Rect.fromPoints(
-      Point.create(
-        Env.width(env)->float_of_int /. 2. -. width /. 2.,
-        Env.height(env)->float_of_int /. 2. -. height /. 2.,
-      ),
-      Point.create(width, height),
-    );
-  let (startButtonClicked, (startButtonDown, startButtonHovered)) =
-    getClickOn(startButtonRect, mousePtf, startButtonState, env);
+  let (updateStartButton, drawStartButton) = {
+    let width = 642. /. 2.;
+    let height = 369. /. 2.;
+    let startButtonRect =
+      Rect.fromPoints(
+        Point.create(
+          Env.width(env)->float_of_int /. 2. -. width /. 2.,
+          Env.height(env)->float_of_int /. 2. -. height /. 2.,
+        ),
+        Point.create(width, height),
+      );
+    useButton(__LOC__, startButtonRect, "start", env);
+  };
 
   let (lossCounter, setLossCounter) = Hooks.useState(__LOC__, 0);
 
-  let allButtonStates = {
-    restart: restartButtonDown,
-    play: playButtonDown,
-    undo: undoButtonDown,
+  let drawMenuButtons = (accelerating) => {
+    drawRestartButton(state.spriteData);
+    drawPlayButton(~assetName=accelerating ? "accelerate" : "play", state.spriteData);
+    drawUndoButton(state.spriteData);
   };
 
   let (totalTime, setTotalTime) = Hooks.useState(__LOC__, 0.);
@@ -1147,21 +1075,10 @@ let draw = (state, env) => {
       env,
     );
 
-    Assets.drawSprite(
-      state.spriteData,
-      "start"
-      ++ (startButtonDown ? "_pressed" : startButtonHovered ? "_hovered" : ""),
-      ~pos=
-        Point.create(
-          startButtonRect.left +. startButtonRect.width /. 2.,
-          startButtonRect.top +. startButtonRect.height /. 2.,
-        ),
-      ~width=startButtonRect.width,
-      ~height=startButtonRect.height,
-      env,
-    );
+    let startButtonClicked = updateStartButton(state.mouse) || Env.keyPressed(Space, env);
+    drawStartButton(state.spriteData);
 
-    if (startButtonClicked || playClicked) {
+    if (startButtonClicked) {
       let (playingMusic, setPlayingMusic) = Hooks.useState(__LOC__, false);
       if (! playingMusic^) {
         setPlayingMusic(true);
@@ -1316,13 +1233,14 @@ let draw = (state, env) => {
     drawToolbar(
       levelCurrentState.items,
       ~inPreparingLevel=true,
-      ~allButtonStates,
+      ~playRect=playButtonRect,
       state.spriteData,
       ~dragging=Option.map(fst, dragging^),
       ~hovered=Option.map(fst, hoveredItem),
       ~time=totalTime^,
       env,
     );
+    drawMenuButtons(false);
     Option.iter(
       ((i, dragOffset)) => {
         switch (hoveredTile) {
@@ -1362,7 +1280,7 @@ let draw = (state, env) => {
   | ([levelInitialState, ...restOfLevels], RunningLevel({states: []})) =>
     failwith("This should not happen, RunningLevel got an empty list.")
   | (
-      [levelInitialState, ...restOfLevels] as allLevels,
+      [levelInitialState, ...restOfLevels],
       RunningLevel({
         states: [levelCurrentState, ...pastLevelStates],
         preparingUndoStack,
@@ -1441,16 +1359,15 @@ let draw = (state, env) => {
     drawMessage(levelCurrentState.title, state.font, env);
     drawToolbar(
       [],
+      ~playRect=playButtonRect,
       state.spriteData,
       ~dragging=None,
       ~hovered=None,
-      ~accelerateTime=accelerating,
-      ~canAccelerate=true,
-      ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
       env,
     ); // TODO: Any items?
+    drawMenuButtons(!accelerating);
     if (restartClicked) {
       setGameState(PreparingLevel(preparingUndoStack));
       setLastTickTime(tickTimeMS +. 1.);
@@ -1461,15 +1378,15 @@ let draw = (state, env) => {
     drawObjects(level.map, state, ~tickTimeMS, env);
     drawToolbar(
       [],
+      ~playRect=playButtonRect,
       state.spriteData,
       ~dragging=None,
       ~hovered=None,
-      ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
       env,
     );
-    let deltaTime = Env.deltaTime(env) *. 1000.0;
+    drawMenuButtons(false);
     if (playClicked) {
       setGameState(PreparingLevel([nextLevel]));
     } else if (restartClicked) {
@@ -1501,14 +1418,15 @@ let draw = (state, env) => {
 
     drawToolbar(
       [],
+      ~playRect=playButtonRect,
       state.spriteData,
       ~dragging=None,
       ~hovered=None,
-      ~allButtonStates,
       ~inPreparingLevel=false,
       ~time=totalTime^,
       env,
     );
+    drawMenuButtons(false);
 
     let deltaTime = Env.deltaTime(env) *. 1000.0;
     if (lastTickTime^ < tickTimeMS) {
